@@ -1207,7 +1207,7 @@ async function exportarInformeJMC(eid) {
         sap:         sap,
         tienda:      nomTienda,
         ciudad:      municipio,
-        fecha:       ,
+        fecha:       '20${aa}-${mm}-${dd}',
         tipo:        tipoAsi || 'Servicio',
         descripcion: diag,
         repuestos:   repuestos,
