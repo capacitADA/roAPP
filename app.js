@@ -975,7 +975,7 @@ async function exportarInformeJMC(eid) {
         return new Promise((resolve) => {
             const tmpImg = new Image();
             tmpImg.onload = () => {
-                const W = 320, H = 160;
+                const W = 100, H = 50;
                 const c = document.createElement('canvas');
                 c.width = W; c.height = H;
                 const ctx = c.getContext('2d');
