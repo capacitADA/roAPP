@@ -278,6 +278,9 @@ let selectedClienteId = null;
 let selectedEquipoId = null;
 let fotosNuevas = [null, null, null];
 let _servicioEidActual = null;
+let _jmcHtmlUltimo      = null;  // HTML del último informe JMC exportado
+let _jmcTicketUltimo    = '';    // Ticket del último informe JMC
+let _jmcRepuestosUltimo = '';    // Repuestos del último informe JMC
 
 const CIUDADES = ['Bogota', 'Medellin', 'Cali', 'Bucaramanga', 'Barranquilla',
     'Cucuta', 'Manizales', 'Pereira', 'Ibague', 'Villavicencio',
@@ -643,7 +646,22 @@ function enviarWhatsApp(tel) {
 function fileToBase64(file) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
+        reader.onload = (e) => {
+            // Comprimir imagen antes de guardar en Firestore (max 800px, calidad 0.7)
+            const img = new Image();
+            img.onload = () => {
+                const MAX = 800;
+                const scale = Math.min(1, MAX / Math.max(img.width, img.height));
+                const w = Math.round(img.width * scale);
+                const h = Math.round(img.height * scale);
+                const canvas = document.createElement('canvas');
+                canvas.width = w; canvas.height = h;
+                canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                resolve(canvas.toDataURL('image/jpeg', 0.72));
+            };
+            img.onerror = reject;
+            img.src = e.target.result;
+        };
         reader.onerror = reject;
         reader.readAsDataURL(file);
     });
@@ -680,6 +698,29 @@ async function guardarServicio(eid) {
         const e = getEq(eid);
         if(e) goTo('historial', e.clienteId, eid);
         toast('✅ Servicio guardado con ' + fotosBase64.length + ' foto(s)');
+
+        // ── Generar Excel semanal si el equipo es de cliente JMC ─────────────
+        // Las fotos ya están en fotosBase64, el informe JMC se guardó en _jmcHtmlUltimo
+        if (esClienteJMC(eid) || esClienteJMC(getEq(eid)?.clienteId)) {
+            const eq = getEq(eid);
+            const tienda = getTiendaJMC(eq?.ubicacion);
+            if (tienda && _jmcHtmlUltimo) {
+                const srvExcel = {
+                    ticket:      _jmcTicketUltimo || '',
+                    sap:         eq?.ubicacion || '',
+                    tienda:      tienda.tienda || '',
+                    ciudad:      tienda.ciudad || '',
+                    fecha:       fecha,
+                    tipo:        tipo,
+                    descripcion: desc,
+                    repuestos:   _jmcRepuestosUltimo || '',
+                    tecnico:     sesionActual?.nombre || '',
+                    equipo:      (eq?.tipo ? eq.tipo + ' ' : '') + (eq?.marca || '') + ' ' + (eq?.modelo || ''),
+                };
+                setTimeout(() => generarYGuardarExcelSemanal(srvExcel, fotosBase64, _jmcHtmlUltimo), 500);
+            }
+        }
+
     } catch(err) {
         toast('❌ Error: ' + err.message);
     }
@@ -1200,28 +1241,10 @@ async function exportarInformeJMC(eid) {
     const ventana = window.open(url, '_blank');
     if (ventana) { ventana.onload = () => { ventana.print(); }; }
 
-    // ── Generar Excel semanal con fotos del servicio e imagen del informe JMC ──
-    // srv contiene todos los datos necesarios para la pestaña [ticket]-[sap]
-    const srvExcel = {
-        ticket:      ticket,
-        sap:         sap,
-        tienda:      nomTienda,
-        ciudad:      municipio,
-        fecha:       `20${aa}-${mm}-${dd}`,
-        tipo:        tipoAsi || 'Servicio',
-        descripcion: diag,
-        repuestos:   repuestos,
-        tecnico:     sesionActual?.nombre || '',
-        equipo:      nomEquipo,
-    };
-    // Fotos del servicio (guardadas en Firestore como base64 en s.fotos[])
-    const srvDoc = servicios.find(s => {
-        const eq = getEq(s.equipoId);
-        return eq?.ubicacion === sap && s.fecha === `20${aa}-${mm.padStart(2,'0')}-${dd.padStart(2,'0')}`;
-    });
-    const fotosExcel = srvDoc?.fotos || [];
-    // Lanzar generación en background sin bloquear el flujo
-    setTimeout(() => generarYGuardarExcelSemanal(srvExcel, fotosExcel, html), 1500);
+    // Guardar datos del informe para usarlos en la generación del Excel al dar Guardar
+    _jmcHtmlUltimo      = html;
+    _jmcTicketUltimo    = ticket;
+    _jmcRepuestosUltimo = repuestos;
 
     closeModal();
     setTimeout(() => {
@@ -1703,7 +1726,7 @@ REPUESTOS: ${srv.repuestos}` : '');
 }
 
 // ── Guardar Excel en Drive (Apps Script separado) ────────────────────────────
-const EXCEL_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwZz6WpCHDI7LQDiWn0Oc2zA1HLPBC6_dI0XKfy1n6OF41E6Vi6y74v_hpgO95kxW3M/exec';
+const EXCEL_SCRIPT_URL = 'REEMPLAZAR_CON_URL_APPS_SCRIPT_EXCEL';
 
 async function subirExcelADrive(xlsxBuffer, filename) {
     try {
