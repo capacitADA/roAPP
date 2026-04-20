@@ -1726,7 +1726,7 @@ REPUESTOS: ${srv.repuestos}` : '');
 }
 
 // ── Guardar Excel en Drive (Apps Script separado) ────────────────────────────
-const EXCEL_SCRIPT_URL = 'REEMPLAZAR_CON_URL_APPS_SCRIPT_EXCEL';
+const EXCEL_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwZz6WpCHDI7LQDiWn0Oc2zA1HLPBC6_dI0XKfy1n6OF41E6Vi6y74v_hpgO95kxW3M/exec';
 
 async function subirExcelADrive(xlsxBuffer, filename) {
     try {
