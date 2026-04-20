@@ -804,7 +804,10 @@ function modalInformeJMC(eid) {
             <div class="fr"><div><label class="fl">N° Ticket</label><input class="fi" id="jTicket" placeholder="TK-..."></div><div><label class="fl">Fecha</label><div style="display:flex;gap:4px;"><input class="fi" id="jDD" placeholder="DD" value="${dd}" style="width:33%;"><input class="fi" id="jMM" placeholder="MM" value="${mm}" style="width:33%;"><input class="fi" id="jAA" placeholder="AA" value="${aa}" style="width:33%;"></div></div></div>
             <div class="fr"><div><label class="fl">Municipio</label><input class="fi" id="jMunicipio" value="${tienda?.ciudad||''}" readonly></div><div><label class="fl">Departamento</label><input class="fi" id="jDepartamento" value="${tienda?.departamento||''}" readonly></div></div>
             <div style="background:#0c214a;color:white;text-align:center;padding:4px;margin:10px 0 6px;border-radius:4px;">INFORMACION TECNICA</div>
-            <div class="fr"><div><label class="fl">Nombre del equipo</label><input class="fi" id="jEquipo" value="${e?.modelo||''}" readonly></div><div><label class="fl">Marca</label><input class="fi" id="jMarca" value="${e?.marca||''}" readonly></div></div>
+            
+<div class="fr"><div><label class="fl">Nombre del equipo</label><input class="fi" id="jEquipo" value="${e?.tipo ? e.tipo + ' ' : ''}${e?.modelo||''}" readonly></div>
+
+<div><label class="fl">Marca</label><input class="fi" id="jMarca" value="${e?.marca||''}" readonly></div></div>
             <div><label class="fl">Serial</label><input class="fi" id="jSerial" value="${e?.serie||''}" readonly></div>
             <div style="background:#0c214a;color:white;text-align:center;padding:4px;margin:10px 0 6px;border-radius:4px;">TIPO DE ASISTENCIA</div>
             <div style="display:flex;flex-wrap:wrap;gap:6px;">${['Reparacion','Garantia','Ajuste','Modificacion','Servicio','Mejora','Combinacion'].map(t=>`<label><input type="radio" name="jTipoAsi" value="${t}" ${t==='Reparacion'?'checked':''}> ${t}</label>`).join('')}</div>
@@ -1197,6 +1200,29 @@ async function exportarInformeJMC(eid) {
     const ventana = window.open(url, '_blank');
     if (ventana) { ventana.onload = () => { ventana.print(); }; }
 
+    // ── Generar Excel semanal con fotos del servicio e imagen del informe JMC ──
+    // srv contiene todos los datos necesarios para la pestaña [ticket]-[sap]
+    const srvExcel = {
+        ticket:      ticket,
+        sap:         sap,
+        tienda:      nomTienda,
+        ciudad:      municipio,
+        fecha:       ,
+        tipo:        tipoAsi || 'Servicio',
+        descripcion: diag,
+        repuestos:   repuestos,
+        tecnico:     sesionActual?.nombre || '',
+        equipo:      nomEquipo,
+    };
+    // Fotos del servicio (guardadas en Firestore como base64 en s.fotos[])
+    const srvDoc = servicios.find(s => {
+        const eq = getEq(s.equipoId);
+        return eq?.ubicacion === sap && s.fecha === ;
+    });
+    const fotosExcel = srvDoc?.fotos || [];
+    // Lanzar generación en background sin bloquear el flujo
+    setTimeout(() => generarYGuardarExcelSemanal(srvExcel, fotosExcel, html), 1500);
+
     closeModal();
     setTimeout(() => {
         if (_servicioEidActual) { modalNuevoServicio(_servicioEidActual); }
@@ -1401,6 +1427,340 @@ async function exportarInformeRO(eid) {
         if (_servicioEidActual) { modalNuevoServicio(_servicioEidActual); }
     }, 500);
 }
+
+
+// ============================================================
+// GENERACIÓN DE EXCEL SEMANAL DE SOPORTES Y EVIDENCIAS
+// Se llama desde exportarInformeJMC() tras generar el PDF
+// Genera un xlsx por semana: Soportes_W{semana}-{año}.xlsx
+// Cada servicio JMC = una pestaña [ticket]-[sap]
+// Requiere ExcelJS cargado desde CDN en index.html
+// ============================================================
+
+// ── Utilidades de semana ──────────────────────────────────────────────────────
+function getNumSemana(fecha) {
+    const d = fecha ? new Date(fecha + 'T12:00:00') : new Date();
+    const startOfYear = new Date(d.getFullYear(), 0, 1);
+    const diff = d - startOfYear + (startOfYear.getTimezoneOffset() - d.getTimezoneOffset()) * 60000;
+    return Math.ceil((diff / 86400000 + startOfYear.getDay() + 1) / 7);
+}
+
+function getNombreArchivoSemanal(fecha) {
+    const d = fecha ? new Date(fecha + 'T12:00:00') : new Date();
+    const w = String(getNumSemana(d)).padStart(2, '0');
+    return `Soportes_W${w}-${d.getFullYear()}.xlsx`;
+}
+
+// ── Escalar imagen base64 manteniendo aspecto, sin recorte ───────────────────
+async function escalarImagenB64(b64, maxW, maxH) {
+    return new Promise(resolve => {
+        const img = new Image();
+        img.onload = () => {
+            const scale = Math.min(maxW / img.width, maxH / img.height);
+            const w = Math.round(img.width * scale);
+            const h = Math.round(img.height * scale);
+            const c = document.createElement('canvas');
+            c.width = w; c.height = h;
+            c.getContext('2d').drawImage(img, 0, 0, w, h);
+            resolve({ dataUrl: c.toDataURL('image/png'), w, h });
+        };
+        img.onerror = () => resolve({ dataUrl: b64, w: maxW, h: maxH });
+        img.src = b64;
+    });
+}
+
+// ── Capturar HTML del informe JMC como imagen PNG ────────────────────────────
+async function capturarHTMLcomoImagen(htmlString, maxW, maxH) {
+    return new Promise(resolve => {
+        // Usar un iframe oculto + html2canvas si está disponible
+        // Si no, devolver null para usar placeholder
+        if (!window.html2canvas) { resolve(null); return; }
+        const iframe = document.createElement('iframe');
+        iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:800px;height:1100px;';
+        document.body.appendChild(iframe);
+        iframe.contentDocument.open();
+        iframe.contentDocument.write(htmlString);
+        iframe.contentDocument.close();
+        setTimeout(() => {
+            html2canvas(iframe.contentDocument.body, {
+                scale: 0.5, useCORS: true, logging: false,
+                width: 800, height: 1100
+            }).then(canvas => {
+                document.body.removeChild(iframe);
+                escalarImagenB64(canvas.toDataURL('image/png'), maxW, maxH).then(resolve);
+            }).catch(() => {
+                document.body.removeChild(iframe);
+                resolve(null);
+            });
+        }, 800);
+    });
+}
+
+// ── Convertir base64 a ArrayBuffer para ExcelJS ──────────────────────────────
+function b64ToArrayBuffer(b64) {
+    const bin = atob(b64.split(',')[1] || b64);
+    const buf = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+    return buf.buffer;
+}
+
+// ── Dimensiones de columnas (anchos reales en puntos Excel) ─────────────────
+// A=10.3 B=10.7 C=15.3 D=8.4 E=14 F=10 G=12.1
+const COL_WIDTHS = [10.3, 10.7, 15.3, 8.4, 14, 10, 12.1];
+// Zonas de imágenes en píxeles (calculadas de anchos reales)
+const ZONA_ABC  = Math.round((10.3 + 10.7 + 15.3) * 7); // ~254px
+const ZONA_DEFG = Math.round((8.4 + 14 + 10 + 12.1) * 7); // ~310px
+const ZONA_H    = Math.round(11 * 15 * 4 / 3);             // ~220px
+
+// Meses en español para formato fecha
+const MESES_CORTO = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+function fmtFechaExcel(s) {
+    if (!s) return '';
+    const [y, m, d] = s.split('-');
+    return `${d}-${MESES_CORTO[parseInt(m)-1]}-${y}`;
+}
+
+// ── Función principal: agregar pestaña al workbook ───────────────────────────
+async function agregarPestanaExcel(wb, srv, fotoB64s, jmcHtmlString) {
+    const ws = wb.addWorksheet(`${srv.ticket}-${srv.sap}`);
+
+    // Anchos de columna
+    ws.columns = COL_WIDTHS.map(w => ({ width: w }));
+
+    // ── Fila 1: título ──────────────────────────────────────────────────────
+    ws.mergeCells('A1:G1');
+    const tCell = ws.getCell('A1');
+    tCell.value = 'MANTENIMIENTO PREVENTIVO/CORRECTIVO';
+    tCell.font = { name: 'Arial', bold: true, size: 13 };
+    tCell.alignment = { horizontal: 'center', vertical: 'middle' };
+    tCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC6DFC9' } };
+    tCell.border = { top:{style:'medium'}, bottom:{style:'medium'}, left:{style:'medium'}, right:{style:'medium'} };
+    ws.getRow(1).height = 22;
+
+    // ── Filas 2-4: zona logos A2:D4 + datos E2:G4 ──────────────────────────
+    ws.mergeCells('A2:D4');
+    ws.mergeCells('A5:D7');
+
+    // Datos tienda
+    const datosT = [
+        ['E2','F2:G2','Ciudad',        srv.ciudad],
+        ['E3','F3:G3','Sap Tienda',    srv.sap],
+        ['E4','F4:G4','Nombre Tienda', srv.tienda],
+        ['E5','F5:G5','N° Tiket',      srv.ticket],
+        ['E6','F6:G6','Fecha',         fmtFechaExcel(srv.fecha)],
+    ];
+    datosT.forEach(([lc, vc, lv, vv]) => {
+        const lCell = ws.getCell(lc);
+        lCell.value = lv; lCell.font = { name:'Arial', bold:true, size:9 };
+        lCell.border = { top:{style:'thin'}, bottom:{style:'thin'}, left:{style:'medium'}, right:{style:'thin'} };
+        ws.mergeCells(vc);
+        const vCell = ws.getCell(vc.split(':')[0]);
+        vCell.value = vv; vCell.font = { name:'Arial', size:9 };
+        vCell.alignment = { horizontal:'center', vertical:'middle', wrapText: lv==='Nombre Tienda' };
+        vCell.border = { top:{style:'thin'}, bottom:{style:'thin'}, left:{style:'thin'}, right:{style:'medium'} };
+    });
+    for (let r = 2; r <= 7; r++) ws.getRow(r).height = r === 4 ? 24 : 16;
+
+    // ── Fila 8: separador ───────────────────────────────────────────────────
+    ws.mergeCells('A8:G8');
+    ws.getRow(8).height = 6;
+
+    // ── Fila 9: encabezados tabla ───────────────────────────────────────────
+    ws.mergeCells('A9:C9');
+    [['A9','Descripcion'],['D9','Cantidad'],['E9','Volumen'],['F9','Valor U.'],['G9','Total']].forEach(([c,v]) => {
+        const cell = ws.getCell(c);
+        cell.value = v;
+        cell.font = { name:'Arial', size:9 };
+        cell.alignment = { horizontal:'center', vertical:'middle' };
+        cell.fill = { type:'pattern', pattern:'solid', fgColor:{ argb:'FFC6DFC9' } };
+        cell.border = { top:{style:'medium'}, bottom:{style:'medium'}, left:{style:'medium'}, right:{style:'medium'} };
+    });
+    ws.getRow(9).height = 16;
+
+    // ── Filas 10-13: tipo + filas vacías con fórmulas ───────────────────────
+    ws.mergeCells('A10:C10');
+    const tipoCell = ws.getCell('A10');
+    tipoCell.value = srv.tipo; tipoCell.font = { name:'Arial', size:9 };
+    tipoCell.alignment = { horizontal:'center' };
+    tipoCell.border = { top:{style:'thin'}, bottom:{style:'thin'}, left:{style:'thin'}, right:{style:'thin'} };
+    ws.getCell('D10').value = 1;
+    ws.getCell('D10').border = { top:{style:'thin'}, bottom:{style:'thin'}, left:{style:'thin'}, right:{style:'thin'} };
+    for (let r = 10; r <= 13; r++) {
+        ws.getCell(`G${r}`).value = { formula: `D${r}*F${r}` };
+        ws.getCell(`G${r}`).border = { top:{style:'thin'}, bottom:{style:'thin'}, left:{style:'thin'}, right:{style:'thin'} };
+        for (const c of ['E','F']) {
+            ws.getCell(`${c}${r}`).border = { top:{style:'thin'}, bottom:{style:'thin'}, left:{style:'thin'}, right:{style:'thin'} };
+        }
+    }
+
+    // ── Fila 14: separador ──────────────────────────────────────────────────
+    ws.getRow(14).height = 4;
+
+    // ── Fila 15: DESCRIPCIÓN DE LA FALLA + subtotales ──────────────────────
+    ws.mergeCells('A15:E15');
+    const descHdr = ws.getCell('A15');
+    descHdr.value = 'DESCRIPCIÓN DE LA FALLA';
+    descHdr.font = { name:'Arial', bold:false, size:11 };
+    descHdr.alignment = { horizontal:'center', vertical:'middle' };
+    descHdr.fill = { type:'pattern', pattern:'solid', fgColor:{ argb:'FFE8F4EC' } };
+    descHdr.border = { top:{style:'medium'}, bottom:{style:'thin'}, left:{style:'medium'}, right:{style:'thin'} };
+
+    ws.getCell('F15').value = 'SubTotal:';
+    ws.getCell('G15').value = { formula: 'SUM(G10:G13)' };
+    ws.getCell('F17').value = 'IVA:';
+    ws.getCell('G17').value = { formula: 'G15*0.19' };
+    ws.getCell('F18').value = 'Total:';
+    ws.getCell('F18').font = { bold: true };
+    ws.getCell('G18').value = { formula: 'G17+G15' };
+    ws.getCell('G18').font = { bold: true };
+    for (const [fc,gc] of [['F15','G15'],['F17','G17'],['F18','G18']]) {
+        for (const c of [fc,gc]) ws.getCell(c).border = { top:{style:'medium'}, bottom:{style:'medium'}, left:{style:'medium'}, right:{style:'medium'} };
+    }
+
+    // ── Filas 16-18: texto de descripción + repuestos ───────────────────────
+    ws.mergeCells('A16:E18');
+    const texto = srv.descripcion + (srv.repuestos ? `
+
+REPUESTOS: ${srv.repuestos}` : '');
+    const descCell = ws.getCell('A16');
+    descCell.value = texto;
+    descCell.font = { name:'Arial', size:9 };
+    descCell.alignment = { horizontal:'left', vertical:'top', wrapText:true };
+    descCell.border = { top:{style:'thin'}, bottom:{style:'medium'}, left:{style:'medium'}, right:{style:'thin'} };
+    for (let r = 16; r <= 18; r++) ws.getRow(r).height = 18;
+
+    // ── Fila 19: REGISTRO FOTOGRÁFICO ───────────────────────────────────────
+    ws.mergeCells('A19:G19');
+    const rfCell = ws.getCell('A19');
+    rfCell.value = 'REGISTRO FOTOGRAFICO';
+    rfCell.font = { name:'Arial', bold:true, size:11 };
+    rfCell.alignment = { horizontal:'center', vertical:'middle' };
+    rfCell.fill = { type:'pattern', pattern:'solid', fgColor:{ argb:'FFC6DFC9' } };
+    rfCell.border = { top:{style:'medium'}, bottom:{style:'medium'}, left:{style:'medium'}, right:{style:'medium'} };
+    ws.getRow(19).height = 18;
+
+    // Merge zonas de fotos y establecer alturas
+    ws.mergeCells('A20:C30'); ws.mergeCells('D20:G30');
+    ws.mergeCells('A31:C41'); ws.mergeCells('D31:G41');
+    ws.mergeCells('A42:C52'); ws.mergeCells('D42:G52');
+    for (let r = 20; r <= 52; r++) ws.getRow(r).height = 20;
+
+    // Bordes zonas fotos
+    for (const z of ['A20','D20','A31','D31','A42','D42']) {
+        const cell = ws.getCell(z);
+        cell.border = { top:{style:'medium'}, bottom:{style:'medium'}, left:{style:'medium'}, right:{style:'medium'} };
+    }
+
+    // ── Insertar logos ───────────────────────────────────────────────────────
+    async function addImg(b64, col, row, w, h) {
+        if (!b64) return;
+        try {
+            const clean = b64.includes(',') ? b64.split(',')[1] : b64;
+            const imgId = wb.addImage({ base64: clean, extension: 'png' });
+            ws.addImage(imgId, {
+                tl: { col: col, row: row },
+                ext: { width: w, height: h },
+                editAs: 'oneCell'
+            });
+        } catch(e) { console.warn('img error:', e); }
+    }
+
+    // Logo OLM (A2:D4) — col 0, row 1
+    const LOGO_OLM = 'https://raw.githubusercontent.com/capacitADA/roAPP/main/RO_LOGO.png';
+    const LOGO_ARA = 'https://raw.githubusercontent.com/capacitADA/roAPP/main/logo_ara.png';
+    try {
+        const [olmResp, araResp] = await Promise.all([fetch(LOGO_OLM), fetch(LOGO_ARA)]);
+        const [olmBlob, araBlob] = await Promise.all([olmResp.blob(), araResp.blob()]);
+        const toB64 = blob => new Promise(r => { const rd = new FileReader(); rd.onload = () => r(rd.result); rd.readAsDataURL(blob); });
+        const [olmB64, araB64] = await Promise.all([toB64(olmBlob), toB64(araBlob)]);
+        await addImg(olmB64, 0, 1, 180, 52);  // A2
+        await addImg(araB64, 0, 4, 280, 52);  // A5
+    } catch(e) { console.warn('logos error:', e); }
+
+    // ── Insertar fotos evidencias ────────────────────────────────────────────
+    // Zona A20:C30 = col 0 row 19, Zona D20:G30 = col 3 row 19
+    // Zona A31:C41 = col 0 row 30, Zona D31:G41 = col 3 row 30
+    const zonas = [
+        { col:0, row:19, w:ZONA_ABC,  h:ZONA_H },  // Foto 1
+        { col:3, row:19, w:ZONA_DEFG, h:ZONA_H },  // Foto 2
+        { col:0, row:30, w:ZONA_ABC,  h:ZONA_H },  // Foto 3
+        { col:3, row:30, w:ZONA_DEFG, h:ZONA_H },  // Informe JMC
+    ];
+
+    for (let i = 0; i < zonas.length; i++) {
+        const z = zonas[i];
+        if (i === 3) {
+            // 4ta zona: captura del informe JMC
+            if (jmcHtmlString) {
+                const capture = await capturarHTMLcomoImagen(jmcHtmlString, z.w, z.h);
+                if (capture) await addImg(capture.dataUrl, z.col, z.row, capture.w, capture.h);
+            }
+        } else if (fotoB64s[i]) {
+            const scaled = await escalarImagenB64(fotoB64s[i], z.w, z.h);
+            await addImg(scaled.dataUrl, z.col, z.row, scaled.w, scaled.h);
+        }
+    }
+}
+
+// ── Guardar Excel en Drive (Apps Script separado) ────────────────────────────
+const EXCEL_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwZz6WpCHDI7LQDiWn0Oc2zA1HLPBC6_dI0XKfy1n6OF41E6Vi6y74v_hpgO95kxW3M/exec';
+
+async function subirExcelADrive(xlsxBuffer, filename) {
+    try {
+        const base64 = btoa(String.fromCharCode(...new Uint8Array(xlsxBuffer)));
+        await fetch(EXCEL_SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ xlsx: base64, filename })
+        });
+        console.log('✅ Excel enviado a Drive:', filename);
+        return true;
+    } catch(e) {
+        console.error('Error subiendo Excel:', e);
+        return false;
+    }
+}
+
+// ── Función pública: llamar desde exportarInformeJMC ─────────────────────────
+async function generarYGuardarExcelSemanal(srv, fotoB64s, jmcHtmlString) {
+    if (!window.ExcelJS) {
+        toast('⚠️ ExcelJS no cargado');
+        return;
+    }
+    try {
+        toast('📊 Generando Excel semanal...');
+        const filename = getNombreArchivoSemanal(srv.fecha);
+
+        // Crear workbook nuevo (cada llamada genera su propio archivo semanal)
+        // En producción se debería descargar el existente, agregar pestaña y re-subir
+        // Por ahora: un xlsx por servicio que se sube a Drive y se consolida manualmente
+        // TODO: implementar fetch del xlsx semanal existente desde Drive para agregar pestaña
+        const wb = new ExcelJS.Workbook();
+        wb.creator = 'capacitADA OLM App';
+        wb.created = new Date();
+
+        await agregarPestanaExcel(wb, srv, fotoB64s, jmcHtmlString);
+
+        const buffer = await wb.xlsx.writeBuffer();
+        const ok = await subirExcelADrive(buffer, filename);
+        if (ok) {
+            toast(`✅ Excel ${filename} guardado en Drive`);
+        } else {
+            // Fallback: descarga local
+            const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = filename; a.click();
+            URL.revokeObjectURL(url);
+            toast(`📥 Excel descargado: ${filename}`);
+        }
+    } catch(err) {
+        console.error('Error Excel:', err);
+        toast('❌ Error generando Excel: ' + err.message);
+    }
+}
+// ── FIN GENERACIÓN EXCEL SEMANAL ─────────────────────────────────────────────
 
 // ===== CRUD CLIENTES =====
 function modalNuevoCliente() {
@@ -1808,6 +2168,7 @@ window.modalInformeRO = modalInformeRO;
 window.limpiarFirmaRO = limpiarFirmaRO;
 window.exportarInformeRO = exportarInformeRO;
 window.exportarInformeJMC = exportarInformeJMC;
+window.generarYGuardarExcelSemanal = generarYGuardarExcelSemanal;
 window.subirCSVJMC = subirCSVJMC;
 window.descargarPlantillaCSV = descargarPlantillaCSV;
 window.generarInformePDF = generarInformePDF;
