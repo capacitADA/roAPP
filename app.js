@@ -794,28 +794,28 @@ function modalInformeJMC(eid) {
 
     showModal(`<div class="modal modal-wide"><div class="modal-h" style="background:#1e3a6e;"><h3>📋 Informe Jeronimo Martins — FF-JMC-DT-06</h3><button class="xbtn" onclick="closeModal()">✕</button></div>
         <div class="modal-b">
-            <div style="background:#0d4a3a;color:white;text-align:center;padding:4px;margin-bottom:6px;border-radius:4px;">CONTRATISTA</div>
+            <div style="background:#0c214a;color:white;text-align:center;padding:4px;margin-bottom:6px;border-radius:4px;">CONTRATISTA</div>
             <div class="fr"><div><label class="fl">Razon social</label><input class="fi" value="CONSTRUCIONES ARQUITECTONICAS RO S.A.S" readonly></div><div><label class="fl">NIT</label><input class="fi" value="900.796.928-1" readonly></div></div>
             <div class="fr"><div><label class="fl">Contacto</label><input class="fi" value="Oscar Leonardo Martinez" readonly></div><div><label class="fl">Telefono</label><input class="fi" value="311 4831801" readonly></div></div>
-            <div style="background:#0d4a3a;color:white;text-align:center;padding:4px;margin:10px 0 6px;border-radius:4px;">SOLICITANTE Y TIENDA</div>
+            <div style="background:#0c214a;color:white;text-align:center;padding:4px;margin:10px 0 6px;border-radius:4px;">SOLICITANTE Y TIENDA</div>
             <div class="fr"><div><label class="fl">Nombre solicitante</label><input class="fi" id="jNombreSol" value="${tienda?.coordinador||''}" readonly></div><div><label class="fl">Cargo</label><input class="fi" id="jCargo" value="${tienda?.cargo||''}" readonly></div></div>
             <div class="fr"><div><label class="fl">Nombre tienda</label><input class="fi" id="jTienda" value="${tienda?.tienda||''}" readonly></div><div><label class="fl">N° Tienda (SAP)</label><input class="fi" id="jSAP" value="${sapActual||''}" readonly></div></div>
             <div class="fr"><div><label class="fl">N° Ticket</label><input class="fi" id="jTicket" placeholder="TK-..."></div><div><label class="fl">Fecha</label><div style="display:flex;gap:4px;"><input class="fi" id="jDD" placeholder="DD" value="${dd}" style="width:33%;"><input class="fi" id="jMM" placeholder="MM" value="${mm}" style="width:33%;"><input class="fi" id="jAA" placeholder="AA" value="${aa}" style="width:33%;"></div></div></div>
             <div class="fr"><div><label class="fl">Municipio</label><input class="fi" id="jMunicipio" value="${tienda?.ciudad||''}" readonly></div><div><label class="fl">Departamento</label><input class="fi" id="jDepartamento" value="${tienda?.departamento||''}" readonly></div></div>
-            <div style="background:#0d4a3a;color:white;text-align:center;padding:4px;margin:10px 0 6px;border-radius:4px;">INFORMACION TECNICA</div>
+            <div style="background:#0c214a;color:white;text-align:center;padding:4px;margin:10px 0 6px;border-radius:4px;">INFORMACION TECNICA</div>
             <div class="fr"><div><label class="fl">Nombre del equipo</label><input class="fi" id="jEquipo" value="${e?.modelo||''}" readonly></div><div><label class="fl">Marca</label><input class="fi" id="jMarca" value="${e?.marca||''}" readonly></div></div>
             <div><label class="fl">Serial</label><input class="fi" id="jSerial" value="${e?.serie||''}" readonly></div>
-            <div style="background:#0d4a3a;color:white;text-align:center;padding:4px;margin:10px 0 6px;border-radius:4px;">TIPO DE ASISTENCIA</div>
+            <div style="background:#0c214a;color:white;text-align:center;padding:4px;margin:10px 0 6px;border-radius:4px;">TIPO DE ASISTENCIA</div>
             <div style="display:flex;flex-wrap:wrap;gap:6px;">${['Reparacion','Garantia','Ajuste','Modificacion','Servicio','Mejora','Combinacion'].map(t=>`<label><input type="radio" name="jTipoAsi" value="${t}" ${t==='Reparacion'?'checked':''}> ${t}</label>`).join('')}</div>
-            <div style="background:#0d4a3a;color:white;text-align:center;padding:4px;margin:10px 0 6px;border-radius:4px;">TIPO DE FALLA</div>
+            <div style="background:#0c214a;color:white;text-align:center;padding:4px;margin:10px 0 6px;border-radius:4px;">TIPO DE FALLA</div>
             <div style="display:flex;flex-wrap:wrap;gap:6px;">${['Mecanicas','Material','Instrumentos','Electricas','Influencia Externa'].map(t=>`<label><input type="radio" name="jTipoFalla" value="${t}"> ${t}</label>`).join('')}</div>
-            <div style="background:#0d4a3a;color:white;text-align:center;padding:4px;margin:10px 0 6px;border-radius:4px;">CAUSA DE FALLAS</div>
+            <div style="background:#0c214a;color:white;text-align:center;padding:4px;margin:10px 0 6px;border-radius:4px;">CAUSA DE FALLAS</div>
             <div style="display:flex;flex-wrap:wrap;gap:6px;">${['Diseno','Fabricacion/Instalacion','Operacion/Mantenimiento','Administracion','Desconocida'].map(t=>`<label><input type="radio" name="jCausa" value="${t}"> ${t}</label>`).join('')}</div>
             <label class="fl">Descripcion de la falla</label><textarea class="fi" id="jDescFalla" rows="2"></textarea>
             <label class="fl">Diagnostico del tecnico</label><textarea class="fi" id="jDiag" rows="3"></textarea>
             <label class="fl">Repuestos cambiados</label><textarea class="fi" id="jRepuestos" rows="2"></textarea>
             <label class="fl">Observaciones</label><textarea class="fi" id="jObs" rows="2"></textarea>
-            <div style="background:#0d4a3a;color:white;text-align:center;padding:4px;margin:10px 0 6px;border-radius:4px;">CONSTANCIA</div>
+            <div style="background:#0c214a;color:white;text-align:center;padding:4px;margin:10px 0 6px;border-radius:4px;">CONSTANCIA</div>
             <div class="fr"><div><label class="fl">Tecnico encargado</label><input class="fi" value="${sesionActual?.nombre||''}" readonly></div><div><label class="fl">Cedula</label><input class="fi" value="${sesionActual?.cedula||''}" readonly></div></div>
             <div class="fr"><div><label class="fl">Hora entrada</label><input class="fi" type="time" id="jHEntrada"></div><div><label class="fl">Hora salida</label><input class="fi" type="time" id="jHSalida"></div></div>
             <div class="fr"><div><label class="fl">Nombre funcionario</label><input class="fi" id="jFuncNombre"></div><div><label class="fl">Cedula</label><input class="fi" id="jFuncCedula"></div></div>
@@ -1012,7 +1012,7 @@ async function exportarInformeJMC(eid) {
   @media print { html,body{margin:0;padding:0;} }
   body { font-family:Arial,sans-serif; margin:0; padding:4px; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
   @font-face { font-family:'Meddon'; src:url('${meddon_b64}') format('truetype'); font-weight:normal; }
-  .firma-tec { font-family:'Meddon',cursive; font-size:19px; color:#1a1a6e; }
+  .firma-tec { font-family:'Meddon',cursive; font-size:14px; color:#1a1a6e; }
   .campo { font-family:Georgia,serif; }
 </style>
 </head><body>
@@ -1168,7 +1168,7 @@ async function exportarInformeJMC(eid) {
         </div>
         <canvas id="selloCanvas" style="display:none;"></canvas>
         <div style="flex-shrink:0;">
-          <img src="${sello_b64}" style="width:212px;height:106px;display:block;background:transparent;">
+          <img src="${sello_b64}" style="width:106px;height:50px;display:block;background:transparent;">
         </div>
   </tr>
   <tr>
@@ -1619,7 +1619,7 @@ function generarInformePDF(eid) {
   @media print{html,body{margin:0;padding:0;}}
   body{font-family:Arial,sans-serif;font-size:11px;color:#111;margin:0;padding:0;}
 </style></head><body>
-<div style="display:flex;align-items:center;border-bottom:3px solid #0d4a3a;padding-bottom:10px;margin-bottom:12px;">
+<div style="display:flex;align-items:center;border-bottom:3px solid #0c214a;padding-bottom:10px;margin-bottom:12px;">
   <img src="${LOGO}" style="height:64px;margin-right:18px;" onerror="this.style.display='none'">
   <div>
     <div style="font-size:14px;color:#555;">Construciones Arquitectonicas RO &nbsp;|&nbsp; 📞 314 374 0477</div>
@@ -1635,7 +1635,7 @@ function generarInformePDF(eid) {
     <td style="padding:6px 10px;border:1px solid #ddd;font-size:14px;" colspan="2"><strong>Activo:</strong> ${e?.tipo||''} ${e?.marca||''} ${e?.modelo||''} &nbsp;&nbsp; <strong>Serial:</strong> ${e?.serie || 'N/A'} &nbsp;&nbsp; <strong>Ubicacion:</strong> ${e?.ubicacion||''}</td>
   </tr>
 </table>
-<div style="background:#0d4a3a;color:white;font-weight:700;font-size:15px;padding:7px 12px;border-radius:4px;margin-bottom:10px;-webkit-print-color-adjust:exact;print-color-adjust:exact;">
+<div style="background:#0c214a;color:white;font-weight:700;font-size:15px;padding:7px 12px;border-radius:4px;margin-bottom:10px;-webkit-print-color-adjust:exact;print-color-adjust:exact;">
   HISTORIAL DE SERVICIOS &nbsp;&nbsp; <span style="font-weight:400;font-size:13px;">${ss.length} registro(s)</span>
 </div>
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">${serviciosHTML}</div>
@@ -1654,7 +1654,7 @@ function modalQR(eid) {
     document.body.appendChild(qrDiv);
     const QRLib = window.QRCode;
     if (!QRLib) { toast('⚠️ QRCode.js no cargado'); return; }
-    new QRLib(qrDiv, { text: url, width: 280, height: 280, colorDark: '#0d4a3a', colorLight: '#ffffff' });
+    new QRLib(qrDiv, { text: url, width: 280, height: 280, colorDark: '#0c214a', colorLight: '#ffffff' });
     setTimeout(() => {
         const qrCanvas = qrDiv.querySelector('canvas');
         const qrDataUrl = qrCanvas.toDataURL('image/png');
@@ -1683,12 +1683,12 @@ function modalQR(eid) {
                 // fondo blanco con borde
                 ctx.fillStyle = '#ffffff';
                 ctx.fillRect(0, 0, W, totalH);
-                ctx.strokeStyle = '#0d4a3a';
+                ctx.strokeStyle = '#0c214a';
                 ctx.lineWidth = 3;
                 ctx.strokeRect(2, 2, W-4, totalH-4);
 
                 // franja verde superior
-                ctx.fillStyle = '#0d4a3a';
+                ctx.fillStyle = '#0c214a';
                 ctx.fillRect(2, 2, W-4, logoH + PAD + 4);
 
                 // logo centrado
@@ -1721,7 +1721,7 @@ function modalQR(eid) {
                 const compositeUrl = compCanvas.toDataURL('image/png');
 
                 showModal(`<div class="modal" style="max-width:360px;"><div class="modal-h"><h3>📱 Codigo QR</h3><button class="xbtn" onclick="closeModal()">✕</button></div><div class="modal-b" style="text-align:center;">
-                    <img src="${compositeUrl}" style="width:100%;border-radius:8px;border:2px solid #0d4a3a;">
+                    <img src="${compositeUrl}" style="width:100%;border-radius:8px;border:2px solid #0c214a;">
                     <a href="${compositeUrl}" download="QR_${e?.marca}_${e?.modelo}.png" class="btn btn-blue btn-full" style="margin-top:8px;">⬇️ Descargar QR</a>
                 </div></div>`);
             };
@@ -1754,7 +1754,7 @@ function manejarRutaQR() {
         <div style="text-align:center;margin-bottom:0.75rem;">
             <img src="https://raw.githubusercontent.com/capacitADA/roAPP/main/RO_LOGO.png" style="height:56px;" onerror="this.style.display='none'">
         </div>
-        <div style="background:#0d4a3a;border-radius:14px;padding:14px;color:white;text-align:center;margin-bottom:0.75rem;">
+        <div style="background:#0c214a;border-radius:14px;padding:14px;color:white;text-align:center;margin-bottom:0.75rem;">
             <div style="font-size:0.85rem;">¿Necesitas soporte?</div>
             <div style="font-size:2rem;font-weight:700;">314 374 0477</div>
         </div>
