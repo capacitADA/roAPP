@@ -842,7 +842,10 @@ function modalInformeJMC(eid) {
             <div style="background:#0c214a;color:white;text-align:center;padding:4px;margin:10px 0 6px;border-radius:4px;">SOLICITANTE Y TIENDA</div>
             <div class="fr"><div><label class="fl">Nombre solicitante</label><input class="fi" id="jNombreSol" value="${tienda?.coordinador||''}" readonly></div><div><label class="fl">Cargo</label><input class="fi" id="jCargo" value="${tienda?.cargo||''}" readonly></div></div>
             <div class="fr"><div><label class="fl">Nombre tienda</label><input class="fi" id="jTienda" value="${tienda?.tienda||''}" readonly></div><div><label class="fl">N° Tienda (SAP)</label><input class="fi" id="jSAP" value="${sapActual||''}" readonly></div></div>
-            <div class="fr"><div><label class="fl">N° Ticket</label><input class="fi" id="jTicket" placeholder="TK-..."></div><div><label class="fl">Fecha</label><div style="display:flex;gap:4px;"><input class="fi" id="jDD" placeholder="DD" value="${dd}" style="width:33%;"><input class="fi" id="jMM" placeholder="MM" value="${mm}" style="width:33%;"><input class="fi" id="jAA" placeholder="AA" value="${aa}" style="width:33%;"></div></div></div>
+            
+<div class="fr"><div><label class="fl">N° Ticket</label>
+<input class="fi" id="jTicket" placeholder="TK-..." style="background-color: #f0d759;"></div>
+<div><label class="fl">Fecha</label><div style="display:flex;gap:4px;"><input class="fi" id="jDD" placeholder="DD" value="${dd}" style="width:33%;"><input class="fi" id="jMM" placeholder="MM" value="${mm}" style="width:33%;"><input class="fi" id="jAA" placeholder="AA" value="${aa}" style="width:33%;"></div></div></div>
             <div class="fr"><div><label class="fl">Municipio</label><input class="fi" id="jMunicipio" value="${tienda?.ciudad||''}" readonly></div><div><label class="fl">Departamento</label><input class="fi" id="jDepartamento" value="${tienda?.departamento||''}" readonly></div></div>
             <div style="background:#0c214a;color:white;text-align:center;padding:4px;margin:10px 0 6px;border-radius:4px;">INFORMACION TECNICA</div>
             
@@ -942,6 +945,15 @@ async function exportarInformeJMC(eid) {
     const getRadio = name => document.querySelector(`input[name="${name}"]:checked`)?.value || '';
 
     const ticket  = document.getElementById('jTicket')?.value || '';
+//condicion de revision sin TICKET
+if (!ticket || ticket.trim() === '') {
+    const confirmar = confirm('⚠️ El número de ticket está vacío. ¿Seguro que deseas guardar el informe sin ticket?');
+    if (!confirmar) {
+        document.getElementById('jTicket').focus();
+        return;
+    }
+}
+
     const sap     = document.getElementById('jSAP')?.value || '';
     const dd      = document.getElementById('jDD')?.value || '';
     const mm      = document.getElementById('jMM')?.value || '';
