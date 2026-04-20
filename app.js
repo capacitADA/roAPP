@@ -15,7 +15,7 @@ const firebaseConfig = {
     appId: "1:1098765052775:web:d51faaaa80c9bc5afc1dc2"
 };
 
-const APPS_SCRIPT_URL = 'REEMPLAZAR_CON_URL_APPS_SCRIPT_RO'; // Desplegar Code.gs en capacitadac05@gmail.com
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbztO3bhqUKVp4iVebukOjXbuW9mEunVkdF0GDCcBGPybo2nLKjNDHk19rs2mM2yg-En7Q/exec';
 
 const fbApp = initializeApp(firebaseConfig);
 const db = getFirestore(fbApp);
