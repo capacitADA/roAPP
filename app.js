@@ -1571,13 +1571,13 @@ async function agregarPestanaExcel(wb, srv, fotoB64s, jmcHtmlString) {
     tCell.value = 'MANTENIMIENTO PREVENTIVO/CORRECTIVO';
     tCell.font = { name: 'Arial', bold: true, size: 13 };
     tCell.alignment = { horizontal: 'center', vertical: 'middle' };
-    tCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC6DFC9' } };
+    tCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFFFF' } };
     tCell.border = { top:{style:'medium'}, bottom:{style:'medium'}, left:{style:'medium'}, right:{style:'medium'} };
     ws.getRow(1).height = 22;
 
     // ── Filas 2-4: zona logos A2:D4 + datos E2:G4 ──────────────────────────
-    ws.mergeCells('A2:D4');
-    ws.mergeCells('A5:D7');
+    ws.mergeCells('A2:D7');
+    ws.mergeCells('A7:D7');
 
     // Datos tienda
     const datosT = [
@@ -1613,7 +1613,7 @@ ws.getRow(7).height = 70;
         cell.value = v;
         cell.font = { name:'Arial', size:9 };
         cell.alignment = { horizontal:'center', vertical:'middle' };
-        cell.fill = { type:'pattern', pattern:'solid', fgColor:{ argb:'FFC6DFC9' } };
+        cell.fill = { type:'pattern', pattern:'solid', fgColor:{ argb:'FFFFFFFF' } };
         cell.border = { top:{style:'medium'}, bottom:{style:'medium'}, left:{style:'medium'}, right:{style:'medium'} };
     });
     ws.getRow(9).height = 16;
@@ -1676,7 +1676,7 @@ REPUESTOS: ${srv.repuestos}` : '');
     rfCell.value = 'REGISTRO FOTOGRAFICO';
     rfCell.font = { name:'Arial', bold:true, size:11 };
     rfCell.alignment = { horizontal:'center', vertical:'middle' };
-    rfCell.fill = { type:'pattern', pattern:'solid', fgColor:{ argb:'FFC6DFC9' } };
+    rfCell.fill = { type:'pattern', pattern:'solid', fgColor:{ argb:'FFFFFFFF' } };
     rfCell.border = { top:{style:'medium'}, bottom:{style:'medium'}, left:{style:'medium'}, right:{style:'medium'} };
     ws.getRow(19).height = 18;
 
