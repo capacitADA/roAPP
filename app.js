@@ -537,7 +537,8 @@ function renderMantenimientos() {
         <div class="sec-head"><h2>Agenda ${año}</h2></div>
         <div class="tbl-wrap">
             <table>
-                <thead><tr><th>Mes</th><th>Fecha</th><th>Cliente</th><th>Activo</th><th></th></tr></thead>
+                <thead><tr><th>Mes</th><th>Fecha</th><th>Cliente</th><th>Activo</th><th></th> hilab
+                </thead>
                 <tbody>
                 ${MESES.map((mes,idx) => {
                     const mp = String(idx+1).padStart(2,'0');
@@ -850,41 +851,38 @@ function limpiarFirmaJMC() {
     if (canvas) canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
 }
 
-// NUEVA FUNCIÓN generarSelloCompuesto corregida
-async function generarSelloCompuesto(selloBase64, sapVal, ddVal, mmVal, aaVal, targetWidth = 100, targetHeight = 50) {
+// ====================================================
+// FUNCIÓN CORREGIDA: genera sello estático en 147x53
+// ====================================================
+async function generarSelloCompuesto(selloBase64, sapVal, ddVal, mmVal, aaVal) {
     return new Promise((resolve) => {
         const tmpImg = new Image();
         tmpImg.onload = () => {
             const canvas = document.createElement('canvas');
-            canvas.width = targetWidth;
-            canvas.height = targetHeight;
+            canvas.width = 147;
+            canvas.height = 53;
             const ctx = canvas.getContext('2d');
 
-            // Dibujar la imagen escalada al tamaño destino (sin filtros)
-            ctx.drawImage(tmpImg, 0, 0, targetWidth, targetHeight);
+            // Dibujar la imagen base escalada a 147x53
+            ctx.drawImage(tmpImg, 0, 0, 147, 53);
 
-            // Escalas respecto a la base de trabajo (147x53)
-            const scaleX = targetWidth / 147;
-            const scaleY = targetHeight / 53;
-            const scale = Math.min(scaleX, scaleY);
-
-            // ---- SAP (sin negrita) ----
-            const sapX = 141 * scaleX;
-            const sapY = 19 * scaleY;
-            const sapFontSize = 15 * scale;
-            ctx.font = `${sapFontSize}px 'Arial Narrow', Arial, sans-serif`;
-            ctx.fillStyle = '#6E5E5B';
+            // ---- SAP ----
+            ctx.font = `15px 'Arial Narrow', Arial, sans-serif`;
+            ctx.fillStyle = '#2c3e50';
             ctx.textAlign = 'right';
-            ctx.fillText(sapVal || '', sapX, sapY);
+            ctx.fillText(sapVal || '', 141, 19);
 
-            // ---- Fecha ----
-            const fechaX = 53 * scaleX;
-            const fechaY = 47 * scaleY;
-            const fechaFontSize = 14 * scale;
-            ctx.font = `${fechaFontSize}px Georgia, serif`;
-            ctx.fillStyle = '#2a2a6e';
+            // ---- Fecha (con valores por defecto) ----
+            const hoy = new Date();
+            const dia = (ddVal && ddVal.toString().trim() !== '') ? ddVal : hoy.getDate().toString().padStart(2, '0');
+            const mes = (mmVal && mmVal.toString().trim() !== '') ? mmVal : (hoy.getMonth() + 1).toString().padStart(2, '0');
+            const anio = (aaVal && aaVal.toString().trim() !== '') ? aaVal : hoy.getFullYear().toString().slice(-2);
+            const fechaStr = `${dia}-${mes}-${anio}`;
+
+            ctx.font = `14px Georgia, serif`;
+            ctx.fillStyle = '#1e3a5f';
             ctx.textAlign = 'left';
-            ctx.fillText(`${ddVal}-${mmVal}-${aaVal}`, fechaX, fechaY);
+            ctx.fillText(fechaStr, 53, 47);
 
             resolve(canvas.toDataURL('image/png'));
         };
@@ -1008,8 +1006,8 @@ async function exportarInformeJMC(eid) {
     const SELLO_URL  = 'https://raw.githubusercontent.com/capacitADA/roAPP/main/sello_ara.png';
     const [meddon_b64, sello_b64_raw] = await Promise.all([imgToBase64(MEDDON_URL), imgToBase64(SELLO_URL)]);
 
-    // Usar la nueva función generarSelloCompuesto con tamaño 100x50
-    const sello_b64 = await generarSelloCompuesto(sello_b64_raw, sap, dd, mm, aa, 100, 50);
+    // Llamada correcta: genera el sello estático en 147x53
+    const sello_b64 = await generarSelloCompuesto(sello_b64_raw, sap, dd, mm, aa);
 
     const nombreArch2 = `Ticket_${ticket||'sin-ticket'}_${tipoAsi}_${sap||'sin-sap'}_${fechaArch}`;
 
@@ -1338,7 +1336,7 @@ async function exportarInformeRO(eid) {
    </tr>
 </table>
 
-<table>
+</table>
   <tr><td colspan="6" class="hd">INFORMACION TECNICA</td></tr>
   <tr>
     <td class="gl" style="width:16%">Equipo</td><td style="width:28%">${e?.tipo||''} ${e?.marca||''} ${e?.modelo||''}</td>
@@ -1356,7 +1354,7 @@ async function exportarInformeRO(eid) {
    </tr>
 </table>
 
-<table>
+<tr>
   <tr><td class="gl" style="border-bottom:none;padding:2px 4px;">Descripcion del trabajo realizado:</td></tr>
   <tr><td style="min-height:55px;height:55px;font-family:Georgia,serif;font-size:7pt;vertical-align:top;padding:3px;">${desc}</td></tr>
   <tr><td class="gl" style="border-top:1px solid #333;border-bottom:none;padding:2px 4px;">Repuestos cambiados:</td></tr>
