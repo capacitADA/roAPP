@@ -1217,7 +1217,7 @@ async function exportarInformeJMC(eid) {
     // Fotos del servicio (guardadas en Firestore como base64 en s.fotos[])
     const srvDoc = servicios.find(s => {
         const eq = getEq(s.equipoId);
-        return eq?.ubicacion === sap && s.fecha === ;
+        return eq?.ubicacion === sap && s.fecha === `20${aa}-${mm.padStart(2,'0')}-${dd.padStart(2,'0')}`;
     });
     const fotosExcel = srvDoc?.fotos || [];
     // Lanzar generación en background sin bloquear el flujo
