@@ -1463,9 +1463,12 @@ async function exportarInformeRO(eid) {
 // ── Utilidades de semana ──────────────────────────────────────────────────────
 function getNumSemana(fecha) {
     const d = fecha ? new Date(fecha + 'T12:00:00') : new Date();
-    const startOfYear = new Date(d.getFullYear(), 0, 1);
-    const diff = d - startOfYear + (startOfYear.getTimezoneOffset() - d.getTimezoneOffset()) * 60000;
-    return Math.ceil((diff / 86400000 + startOfYear.getDay() + 1) / 7);
+    // Metodo ISO 8601: semana empieza el lunes
+    const tmp = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    const dayOfWeek = tmp.getUTCDay() || 7;
+    tmp.setUTCDate(tmp.getUTCDate() + 4 - dayOfWeek);
+    const yearStart = new Date(Date.UTC(tmp.getUTCFullYear(), 0, 1));
+    return Math.ceil((((tmp - yearStart) / 86400000) + 1) / 7);
 }
 
 function getNombreArchivoSemanal(fecha) {
@@ -1728,9 +1731,20 @@ REPUESTOS: ${srv.repuestos}` : '');
 // ── Guardar Excel en Drive (Apps Script separado) ────────────────────────────
 const EXCEL_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwZz6WpCHDI7LQDiWn0Oc2zA1HLPBC6_dI0XKfy1n6OF41E6Vi6y74v_hpgO95kxW3M/exec';
 
+function bufferToBase64(buffer) {
+    // Convertir en chunks para evitar Maximum call stack exceeded
+    const bytes = new Uint8Array(buffer);
+    let bin = '';
+    const CHUNK = 8192;
+    for (let i = 0; i < bytes.length; i += CHUNK) {
+        bin += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
+    }
+    return btoa(bin);
+}
+
 async function subirExcelADrive(xlsxBuffer, filename) {
     try {
-        const base64 = btoa(String.fromCharCode(...new Uint8Array(xlsxBuffer)));
+        const base64 = bufferToBase64(xlsxBuffer);
         await fetch(EXCEL_SCRIPT_URL, {
             method: 'POST',
             mode: 'no-cors',
