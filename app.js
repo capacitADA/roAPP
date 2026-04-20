@@ -624,9 +624,9 @@ function modalRecordar(clienteId, equipoId, fecha) {
         if (tienda) {
             tel = tienda.telefono;
             destinatario = `${tienda.coordinador} · SAP ${sap}`;
-            msg = `Hola *${tienda.coordinador}*, recordatorio: activo *${e?.marca} ${e?.modelo}* tienda *${tienda.tienda} (SAP ${sap})* requiere mantenimiento el *${fechaF}*. Confirmar visita. OLM Ingenieria 📞 3143740477`;
-        } else { tel = c?.telefono; destinatario = c?.nombre; msg = `Hola *${c?.nombre}*, recordatorio: activo *${e?.marca} ${e?.modelo}* ubicado en *${e?.ubicacion}* requiere mantenimiento el *${fechaF}*. OLM Ingenieria 📞 3143740477`; }
-    } else { tel = c?.telefono; destinatario = c?.nombre; msg = `Hola *${c?.nombre}*, recordatorio: activo *${e?.marca} ${e?.modelo}* requiere mantenimiento el *${fechaF}*. OLM Ingenieria 📞 3143740477`; }
+            msg = `Hola *${tienda.coordinador}*, recordatorio: activo *${e?.marca} ${e?.modelo}* tienda *${tienda.tienda} (SAP ${sap})* requiere mantenimiento el *${fechaF}*. Confirmar visita. CONSTRUCIONES ARQUITECTONICAS RO S.A.S 📞 3143740477`;
+        } else { tel = c?.telefono; destinatario = c?.nombre; msg = `Hola *${c?.nombre}*, recordatorio: activo *${e?.marca} ${e?.modelo}* ubicado en *${e?.ubicacion}* requiere mantenimiento el *${fechaF}*. CONSTRUCIONES ARQUITECTONICAS RO S.A.S 📞 3143740477`; }
+    } else { tel = c?.telefono; destinatario = c?.nombre; msg = `Hola *${c?.nombre}*, recordatorio: activo *${e?.marca} ${e?.modelo}* requiere mantenimiento el *${fechaF}*. CONSTRUCIONES ARQUITECTONICAS RO S.A.S 📞 3143740477`; }
     showModal(`<div class="modal"><div class="modal-h"><h3>📱 Recordatorio WhatsApp</h3><button class="xbtn" onclick="closeModal()">✕</button></div><div class="modal-b"><div class="ec-meta">Para <strong>${destinatario}</strong> · 📞 ${tel}</div><div class="wa-bubble">${msg}</div><textarea class="fi" id="waMsgEdit" rows="4">${msg}</textarea><div class="modal-foot"><button class="btn btn-gray" onclick="closeModal()">Cancelar</button><button class="btn btn-wa" onclick="enviarWhatsApp('${tel}')">📱 Abrir WhatsApp</button></div></div></div>`);
 }
 
@@ -795,7 +795,7 @@ function modalInformeJMC(eid) {
     showModal(`<div class="modal modal-wide"><div class="modal-h" style="background:#1e3a6e;"><h3>📋 Informe Jeronimo Martins — FF-JMC-DT-06</h3><button class="xbtn" onclick="closeModal()">✕</button></div>
         <div class="modal-b">
             <div style="background:#0d4a3a;color:white;text-align:center;padding:4px;margin-bottom:6px;border-radius:4px;">CONTRATISTA</div>
-            <div class="fr"><div><label class="fl">Razon social</label><input class="fi" value="OLM INGENIERIA SAS" readonly></div><div><label class="fl">NIT</label><input class="fi" value="901.050.468-5" readonly></div></div>
+            <div class="fr"><div><label class="fl">Razon social</label><input class="fi" value="CONSTRUCIONES ARQUITECTONICAS RO S.A.S" readonly></div><div><label class="fl">NIT</label><input class="fi" value="900.796.928-1" readonly></div></div>
             <div class="fr"><div><label class="fl">Contacto</label><input class="fi" value="Oscar Leonardo Martinez" readonly></div><div><label class="fl">Telefono</label><input class="fi" value="311 4831801" readonly></div></div>
             <div style="background:#0d4a3a;color:white;text-align:center;padding:4px;margin:10px 0 6px;border-radius:4px;">SOLICITANTE Y TIENDA</div>
             <div class="fr"><div><label class="fl">Nombre solicitante</label><input class="fi" id="jNombreSol" value="${tienda?.coordinador||''}" readonly></div><div><label class="fl">Cargo</label><input class="fi" id="jCargo" value="${tienda?.cargo||''}" readonly></div></div>
@@ -1032,9 +1032,9 @@ async function exportarInformeJMC(eid) {
   <tr><td colspan="4" style="${S.hdrDark}">CONTRATISTA</td></tr>
   <tr>
     <td style="${S.glbl};width:16%;">Razon social</td>
-    <td style="${S.cell};width:34%;">OLM INGENIERIA SAS</td>
+    <td style="${S.cell};width:34%;">CONSTRUCIONES ARQUITECTONICAS RO S.A.S</td>
     <td style="${S.glbl};width:12%;">N&deg; NIT</td>
-    <td style="${S.cell};">901.050.468-5</td>
+    <td style="${S.cell};">900.796.928-1</td>
   </tr>
   <tr>
     <td style="${S.glbl};">Contacto</td>
@@ -1206,7 +1206,7 @@ function modalInformeRO(eid) {
     showModal(`<div class="modal modal-wide"><div class="modal-h" style="background:#1565c0;"><h3>📋 Informe Tecnico — Construciones RO</h3><button class="xbtn" onclick="closeModal()">✕</button></div>
         <div class="modal-b">
             <div style="background:#1976d2;color:white;text-align:center;padding:4px;margin-bottom:6px;border-radius:4px;">CONTRATISTA</div>
-            <div class="fr"><div><label class="fl">Razon social</label><input class="fi" value="OLM INGENIERIA SAS" readonly></div><div><label class="fl">NIT</label><input class="fi" value="901.050.468-5" readonly></div></div>
+            <div class="fr"><div><label class="fl">Razon social</label><input class="fi" value="CONSTRUCIONES ARQUITECTONICAS RO S.A.S" readonly></div><div><label class="fl">NIT</label><input class="fi" value="900.796.928-1" readonly></div></div>
             <div class="fr"><div><label class="fl">Contacto</label><input class="fi" value="Oscar Leonardo Martinez" readonly></div><div><label class="fl">Telefono</label><input class="fi" value="311 4831801" readonly></div></div>
             <div style="background:#1976d2;color:white;text-align:center;padding:4px;margin:10px 0 6px;border-radius:4px;">CLIENTE</div>
             <div class="fr"><div><label class="fl">Empresa</label><input class="fi" value="Construciones Arquitectonicas RO" readonly></div><div><label class="fl">NIT</label><input class="fi" value="900.796.928-1" readonly></div></div>
@@ -1306,8 +1306,8 @@ async function exportarInformeRO(eid) {
 <table>
   <tr><td colspan="4" class="hd">CONTRATISTA</td></tr>
   <tr>
-    <td class="gl" style="width:18%">Razon social</td><td style="width:32%">OLM INGENIERIA SAS</td>
-    <td class="gl" style="width:12%">NIT</td><td>901.050.468-5</td>
+    <td class="gl" style="width:18%">Razon social</td><td style="width:32%">CONSTRUCIONES ARQUITECTONICAS RO S.A.S</td>
+    <td class="gl" style="width:12%">NIT</td><td>900.796.928-1</td>
   </tr>
   <tr>
     <td class="gl">Contacto</td><td>Oscar Leonardo Martinez</td>
