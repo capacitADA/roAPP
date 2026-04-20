@@ -796,7 +796,7 @@ function modalInformeJMC(eid) {
         <div class="modal-b">
             <div style="background:#0c214a;color:white;text-align:center;padding:4px;margin-bottom:6px;border-radius:4px;">CONTRATISTA</div>
             <div class="fr"><div><label class="fl">Razon social</label><input class="fi" value="CONSTRUCIONES ARQUITECTONICAS RO S.A.S" readonly></div><div><label class="fl">NIT</label><input class="fi" value="900.796.928-1" readonly></div></div>
-            <div class="fr"><div><label class="fl">Contacto</label><input class="fi" value="Oscar Leonardo Martinez" readonly></div><div><label class="fl">Telefono</label><input class="fi" value="311 4831801" readonly></div></div>
+            <div class="fr"><div><label class="fl">Contacto</label><input class="fi" value="Harrison Rincon" readonly></div><div><label class="fl">Telefono</label><input class="fi" value="314 3740477" readonly></div></div>
             <div style="background:#0c214a;color:white;text-align:center;padding:4px;margin:10px 0 6px;border-radius:4px;">SOLICITANTE Y TIENDA</div>
             <div class="fr"><div><label class="fl">Nombre solicitante</label><input class="fi" id="jNombreSol" value="${tienda?.coordinador||''}" readonly></div><div><label class="fl">Cargo</label><input class="fi" id="jCargo" value="${tienda?.cargo||''}" readonly></div></div>
             <div class="fr"><div><label class="fl">Nombre tienda</label><input class="fi" id="jTienda" value="${tienda?.tienda||''}" readonly></div><div><label class="fl">N° Tienda (SAP)</label><input class="fi" id="jSAP" value="${sapActual||''}" readonly></div></div>
@@ -1038,9 +1038,9 @@ async function exportarInformeJMC(eid) {
   </tr>
   <tr>
     <td style="${S.glbl};">Contacto</td>
-    <td style="${S.cell};">Oscar Leonardo Martinez</td>
+    <td style="${S.cell};">Harrison Rincon</td>
     <td style="${S.glbl};">Telefono</td>
-    <td style="${S.cell};">311 4831801</td>
+    <td style="${S.cell};">314 3740477</td>
   </tr>
 </table>
 
@@ -1207,7 +1207,7 @@ function modalInformeRO(eid) {
         <div class="modal-b">
             <div style="background:#1976d2;color:white;text-align:center;padding:4px;margin-bottom:6px;border-radius:4px;">CONTRATISTA</div>
             <div class="fr"><div><label class="fl">Razon social</label><input class="fi" value="CONSTRUCIONES ARQUITECTONICAS RO S.A.S" readonly></div><div><label class="fl">NIT</label><input class="fi" value="900.796.928-1" readonly></div></div>
-            <div class="fr"><div><label class="fl">Contacto</label><input class="fi" value="Oscar Leonardo Martinez" readonly></div><div><label class="fl">Telefono</label><input class="fi" value="311 4831801" readonly></div></div>
+            <div class="fr"><div><label class="fl">Contacto</label><input class="fi" value="Harrison Rincon" readonly></div><div><label class="fl">Telefono</label><input class="fi" value="314 3740477" readonly></div></div>
             <div style="background:#1976d2;color:white;text-align:center;padding:4px;margin:10px 0 6px;border-radius:4px;">CLIENTE</div>
             <div class="fr"><div><label class="fl">Empresa</label><input class="fi" value="Construciones Arquitectonicas RO" readonly></div><div><label class="fl">NIT</label><input class="fi" value="900.796.928-1" readonly></div></div>
             <div class="fr"><div><label class="fl">Contacto</label><input class="fi" value="Harrison Rincon" readonly></div><div><label class="fl">Celular</label><input class="fi" value="314 3740477" readonly></div></div>
@@ -1310,8 +1310,8 @@ async function exportarInformeRO(eid) {
     <td class="gl" style="width:12%">NIT</td><td>900.796.928-1</td>
   </tr>
   <tr>
-    <td class="gl">Contacto</td><td>Oscar Leonardo Martinez</td>
-    <td class="gl">Telefono</td><td>311 4831801</td>
+    <td class="gl">Contacto</td><td>Harrison Rincon</td>
+    <td class="gl">Telefono</td><td>314 3740477</td>
   </tr>
 </table>
 
