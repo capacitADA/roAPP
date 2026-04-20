@@ -1576,8 +1576,8 @@ async function agregarPestanaExcel(wb, srv, fotoB64s, jmcHtmlString) {
     ws.getRow(1).height = 22;
 
     // ── Filas 2-4: zona logos A2:D4 + datos E2:G4 ──────────────────────────
-    ws.mergeCells('A2:D7');
-    ws.mergeCells('A7:D7');
+    ws.mergeCells('A2:D6');
+    ws.mergeCells('A7:c7');
 
     // Datos tienda
     const datosT = [
