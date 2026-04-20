@@ -1,5 +1,6 @@
 /* ============================================
-   CONSTRUCIONES ARQUITECTONICAS RO - ESTILOS MOBILE-FIRST
+   CONSTRUCCIONES ARQUITECTONICAS RO - ESTILOS MOBILE-FIRST
+   PALETA AZUL CORPORATIVA
    ============================================ */
 
 *, *::before, *::after {
@@ -9,28 +10,44 @@
 }
 
 :root {
-    --green:       #1a3a6e;
-    --green-dark:  #122d57;
-    --green-light: #daeaf8;
-    --green-mid:   #2457a0;
-    --gold:        #5b9bd5;
-    --gold-bg:     #e8f4fd;
-    --gold-col:    #2457a0;
+    /* Azul principal - reemplazo del viejo verde */
+    --blue-primary:   #1e3a8a;  /* azul intenso */
+    --blue-dark:      #172554;
+    --blue-light:     #dbeafe;
+    --blue-mid:       #3b82f6;
+    
+    /* Mantenemos los nombres de variables para no romper referencias */
+    --green:       var(--blue-primary);
+    --green-dark:  var(--blue-dark);
+    --green-light: var(--blue-light);
+    --green-mid:   var(--blue-mid);
+    
+    /* Dorado / acento ahora también azul */
+    --gold:        #60a5fa;
+    --gold-bg:     #eff6ff;
+    --gold-col:    var(--blue-mid);
+    
+    /* Neutros */
     --border:      #e2e8f0;
     --bg:          #f0f6fc;
     --bg2:         #f8fbfe;
     --text:        #0f172a;
     --muted:       #475569;
     --hint:        #94a3b8;
-    --success:     #16a34a;
+    
+    /* Estados - ahora azules */
+    --success:     #2563eb;    /* antes era verde #16a34a */
     --red:         #dc2626;
     --purple:      #7c3aed;
+    
+    /* WhatsApp se conserva */
     --whatsapp:    #25D366;
-    /* paleta RO: azul oscuro + celeste */
-    --blue:        #1a3a6e;
-    --blue-dark:   #122d57;
-    --blue-light:  #daeaf8;
-    --teal:        #2457a0;
+    
+    /* Variables legacy de azul (ya no se usan pero se dejan por compatibilidad) */
+    --blue:        var(--blue-primary);
+    --blue-dark:   var(--blue-dark);
+    --blue-light:  var(--blue-light);
+    --teal:        var(--blue-mid);
     --teal-dark:   #1e4d8c;
 }
 
@@ -276,8 +293,9 @@ html, body {
 .panel-box.anual-box { background: var(--teal-dark); }
 .panel-box.anual-box .panel-box-lbl { color: #a5d6bc; }
 
-.panel-box.mensual-box { background: #5a9630; }
-.panel-box.mensual-box .panel-box-lbl { color: #d8f5b8; }
+/* Mensual ahora en azul medio */
+.panel-box.mensual-box { background: var(--blue-mid); }
+.panel-box.mensual-box .panel-box-lbl { color: #ffffffcc; }
 
 .panel-box.header-box { background: var(--green-dark); }
 .panel-box.header-box .panel-box-lbl { font-size: 0.7rem; color: #a5c9bb; }
@@ -310,7 +328,7 @@ html, body {
 }
 .b-blue   { background: var(--green-light); color: var(--green); }
 .b-red    { background: #fee2e2; color: var(--red); }
-.b-green  { background: #dcfce7; color: var(--success); }
+.b-green  { background: #dbeafe; color: var(--blue-primary); }  /* antes verde, ahora azul */
 .b-amber  { background: var(--gold-bg); color: var(--gold); }
 .b-purple { background: #f5f3ff; color: var(--purple); }
 
