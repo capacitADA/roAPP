@@ -199,7 +199,7 @@ function esClienteRO(clienteId) {
     return c?.nombre === 'Construciones Arquitectonicas RO';
 }
 
-const LOGO_RO_B64 = 'data:image/png;base64,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';
+const LOGO_RO_B64 = 'data:image/png;base64,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';
 
 // ===== HELPERS =====
 const getEq = id => equipos.find(e => e.id === id);
@@ -850,6 +850,49 @@ function limpiarFirmaJMC() {
     if (canvas) canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
 }
 
+// NUEVA FUNCIÓN generarSelloCompuesto corregida
+async function generarSelloCompuesto(selloBase64, sapVal, ddVal, mmVal, aaVal, targetWidth = 100, targetHeight = 50) {
+    return new Promise((resolve) => {
+        const tmpImg = new Image();
+        tmpImg.onload = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = targetWidth;
+            canvas.height = targetHeight;
+            const ctx = canvas.getContext('2d');
+
+            // Dibujar la imagen escalada al tamaño destino (sin filtros)
+            ctx.drawImage(tmpImg, 0, 0, targetWidth, targetHeight);
+
+            // Escalas respecto a la base de trabajo (147x53)
+            const scaleX = targetWidth / 147;
+            const scaleY = targetHeight / 53;
+            const scale = Math.min(scaleX, scaleY);
+
+            // ---- SAP (sin negrita) ----
+            const sapX = 141 * scaleX;
+            const sapY = 19 * scaleY;
+            const sapFontSize = 15 * scale;
+            ctx.font = `${sapFontSize}px 'Arial Narrow', Arial, sans-serif`;
+            ctx.fillStyle = '#6E5E5B';
+            ctx.textAlign = 'right';
+            ctx.fillText(sapVal || '', sapX, sapY);
+
+            // ---- Fecha ----
+            const fechaX = 53 * scaleX;
+            const fechaY = 47 * scaleY;
+            const fechaFontSize = 14 * scale;
+            ctx.font = `${fechaFontSize}px Georgia, serif`;
+            ctx.fillStyle = '#2a2a6e';
+            ctx.textAlign = 'left';
+            ctx.fillText(`${ddVal}-${mmVal}-${aaVal}`, fechaX, fechaY);
+
+            resolve(canvas.toDataURL('image/png'));
+        };
+        tmpImg.onerror = () => resolve(selloBase64);
+        tmpImg.src = selloBase64;
+    });
+}
+
 async function exportarInformeJMC(eid) {
     const e = getEq(eid);
     const canvas = document.getElementById('jFirmaCanvas');
@@ -899,9 +942,7 @@ async function exportarInformeJMC(eid) {
         } catch { return url; }
     }
     const [logo_ara_b64, logo_jm_b64] = await Promise.all([imgToBase64(LOGO_ARA), imgToBase64(LOGO_JM)]);
-    // sello y meddon se cargan más abajo antes de generar el HTML
-
-    // estilos inline reutilizables
+    
     const PC = '-webkit-print-color-adjust:exact;print-color-adjust:exact;';
     const GE = "font-family:Georgia,serif;";
     const S = {
@@ -919,8 +960,6 @@ async function exportarInformeJMC(eid) {
         evalNo:   'padding:1px 3px;border:1px solid #333;',
         tbl:      'width:100%;border-collapse:collapse;margin-top:-1px;',
     };
-
-   
 
     const chkMark = (sel) => sel
         ? `<span style="display:inline-block;width:10px;height:10px;background:#222;border:1.5px solid #222;vertical-align:middle;margin-right:3px;"></span>`
@@ -965,45 +1004,14 @@ async function exportarInformeJMC(eid) {
     const MESES_TEXTO = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
     const fechaTexto = (dd && mm && aa) ? `${parseInt(dd)} ${MESES_TEXTO[parseInt(mm)-1]} 20${aa}` : '';
 
-    // Cargar Meddon para firma + sello
     const MEDDON_URL = 'https://raw.githubusercontent.com/capacitADA/roAPP/main/Meddon-Regular.ttf';
     const SELLO_URL  = 'https://raw.githubusercontent.com/capacitADA/roAPP/main/sello_ara.png';
     const [meddon_b64, sello_b64_raw] = await Promise.all([imgToBase64(MEDDON_URL), imgToBase64(SELLO_URL)]);
 
-    // Generar sello compuesto: imagen base + numero de tienda + fecha quemados en canvas
-    async function generarSelloCompuesto(selloBase64, sapVal, ddVal, mmVal, aaVal) {
-        return new Promise((resolve) => {
-            const tmpImg = new Image();
-            tmpImg.onload = () => {
-                const W = 100, H = 50;
-                const c = document.createElement('canvas');
-                c.width = W; c.height = H;
-                const ctx = c.getContext('2d');
-                // Aplicar mismo filtro de color que antes
-                ctx.filter = 'grayscale(100%) sepia(25%) brightness(0.75) contrast(1.1)';
-                ctx.drawImage(tmpImg, 0, 0, W, H);
-                ctx.filter = 'none';
-                // Numero de tienda (SAP) — posicion calibrada sobre 320x160
-                ctx.font = "bold 14px 'Arial Narrow', Arial, sans-serif";
-                ctx.fillStyle = '#6E5E5B';
-                ctx.textAlign = 'right';
-                ctx.fillText(sapVal || '', 316, 68);
-                // Fecha — posicion calibrada
-                ctx.font = "11.5px Georgia, serif";
-                ctx.fillStyle = '#2a2a6e';
-                ctx.textAlign = 'left';
-                ctx.fillText(`${ddVal}-${mmVal}-${aaVal}`, 128, 126);
-                resolve(c.toDataURL('image/png'));
-            };
-            tmpImg.onerror = () => resolve(selloBase64);
-            tmpImg.src = selloBase64;
-        });
-    }
-    const sello_b64 = await generarSelloCompuesto(sello_b64_raw, sap, dd, mm, aa);
+    // Usar la nueva función generarSelloCompuesto con tamaño 100x50
+    const sello_b64 = await generarSelloCompuesto(sello_b64_raw, sap, dd, mm, aa, 100, 50);
 
-    // Nombre archivo: Ticket_[ticket]_[tipoAsi]_[sap]_[fecha]
-    const tipoAsiNombre = getRadio('jTipoAsi') || 'servicio';
-    const nombreArch2 = `Ticket_${ticket||'sin-ticket'}_${tipoAsiNombre}_${sap||'sin-sap'}_${fechaArch}`;
+    const nombreArch2 = `Ticket_${ticket||'sin-ticket'}_${tipoAsi}_${sap||'sin-sap'}_${fechaArch}`;
 
     const html = `<!DOCTYPE html>
 <html><head><meta charset="UTF-8"><title>${nombreArch2}</title>
@@ -1035,13 +1043,13 @@ async function exportarInformeJMC(eid) {
     <td style="${S.cell};width:34%;">CONSTRUCIONES ARQUITECTONICAS RO S.A.S</td>
     <td style="${S.glbl};width:12%;">N&deg; NIT</td>
     <td style="${S.cell};">900.796.928-1</td>
-  </tr>
+   </tr>
   <tr>
     <td style="${S.glbl};">Contacto</td>
     <td style="${S.cell};">Harrison Rincon</td>
     <td style="${S.glbl};">Telefono</td>
     <td style="${S.cell};">314 3740477</td>
-  </tr>
+   </tr>
 </table>
 
 <!-- SOLICITANTE: 8 columnas -->
@@ -1052,7 +1060,7 @@ async function exportarInformeJMC(eid) {
     <td colspan="4" style="${S.cell};">${nomSol}</td>
     <td style="${S.glbl};width:8%;">Cargo</td>
     <td colspan="2" style="${S.cell};">${cargoSol}</td>
-  </tr>
+   </tr>
   <tr>
     <td style="${S.glbl};">Nombre de la tienda</td>
     <td style="${S.cell};width:17%;">${nomTienda}</td>
@@ -1062,13 +1070,13 @@ async function exportarInformeJMC(eid) {
     <td style="${S.cell};width:12%;font-size:11pt;">${ticket}</td>
     <td style="${S.glbl};text-align:center;width:6%;" rowspan="2">Fecha</td>
     <td style="${S.cell};text-align:center;width:14%;" rowspan="2">${fechaTexto}</td>
-  </tr>
+   </tr>
   <tr>
     <td style="${S.glbl};">Municipio</td>
     <td colspan="2" style="${S.cell};">${municipio}</td>
     <td colspan="2" style="${S.glbl};">Departamento</td>
     <td style="${S.cell};">${depto}</td>
-  </tr>
+   </tr>
 </table>
 
 <!-- INFO TECNICA -->
@@ -1081,7 +1089,7 @@ async function exportarInformeJMC(eid) {
     <td style="${S.cell};width:16%;">${marcaEq}</td>
     <td style="${S.glbl};width:10%;">Serial</td>
     <td style="${S.cell};">${serialEq}</td>
-  </tr>
+   </tr>
 </table>
 
 <!-- TIPO ASISTENCIA -->
@@ -1122,7 +1130,7 @@ async function exportarInformeJMC(eid) {
     <th style="${S.glbl};"></th>
     <th style="${S.glbl};width:9%;text-align:center;">CUMPLE</th>
     <th style="${S.glbl};width:9%;text-align:center;">NO CUMPLE</th>
-  </tr>
+   </tr>
   ${evalHTML}
 </table>
 
@@ -1136,7 +1144,7 @@ async function exportarInformeJMC(eid) {
     <td style="${S.glbl};width:11%;text-align:center;">Hora de salida</td>
     <td style="${S.glbl};width:8%;text-align:center;">Datos</td>
     <td style="${S.glbl};text-align:center;">Funcionario de la tienda</td>
-  </tr>
+   </tr>
   <tr>
     <td style="${S.campo};">${sesionActual?.nombre||''}</td>
     <td style="${S.campo};text-align:center;">${sesionActual?.cedula||''}</td>
@@ -1144,19 +1152,19 @@ async function exportarInformeJMC(eid) {
     <td style="${S.campo};text-align:center;">${hSalida}</td>
     <td style="${S.glbl};">Nombre:</td>
     <td style="${S.campo};">${funcNombre}</td>
-  </tr>
+   </tr>
   <tr>
     <td style="${S.cell};"></td><td style="${S.cell};"></td><td style="${S.cell};"></td><td style="${S.cell};"></td>
     <td style="${S.glbl};">Cedula:</td><td style="${S.campo};">${funcCedula}</td>
-  </tr>
+   </tr>
   <tr>
     <td style="${S.cell};"></td><td style="${S.cell};"></td><td style="${S.cell};"></td><td style="${S.cell};"></td>
     <td style="${S.glbl};">Cargo:</td><td style="${S.campo};">${funcCargo}</td>
-  </tr>
+   </tr>
   <tr>
     <td style="${S.cell};"></td><td style="${S.cell};"></td><td style="${S.cell};"></td><td style="${S.cell};"></td>
     <td style="${S.glbl};">SAP:</td><td style="${S.campo};">${funcSAP}</td>
-  </tr>
+   </tr>
   <tr>
     <td style="${S.glbl};">Firma Tecnico Encargado:</td>
     <td colspan="3" style="${S.cell};padding:4px 6px;"><span class="firma-tec">${sesionActual?.nombre||''}</span></td>
@@ -1166,15 +1174,16 @@ async function exportarInformeJMC(eid) {
         <div style="flex:1;min-height:44px;text-align:center;">
           ${firmaDataUrl ? `<img src="${firmaDataUrl}" style="max-height:44px;">` : ''}
         </div>
-        <canvas id="selloCanvas" style="display:none;"></canvas>
         <div style="flex-shrink:0;">
           <img src="${sello_b64}" style="width:106px;height:50px;display:block;background:transparent;">
         </div>
-  </tr>
+      </div>
+    </td>
+   </tr>
   <tr>
     <td style="${S.glbl};">Cargo:</td>
     <td colspan="3" style="${S.campo};">${sesionActual?.cargo||''}</td>
-  </tr>
+   </tr>
 </table>
 
 <div style="font-size:7pt;color:#888;text-align:right;margin-top:3px;">
@@ -1195,7 +1204,6 @@ async function exportarInformeJMC(eid) {
         if (_servicioEidActual) { modalNuevoServicio(_servicioEidActual); }
     }, 500);
 }
-
 
 // ===== MODAL INFORME RO =====
 function modalInformeRO(eid) {
@@ -1308,11 +1316,11 @@ async function exportarInformeRO(eid) {
   <tr>
     <td class="gl" style="width:18%">Razon social</td><td style="width:32%">CONSTRUCIONES ARQUITECTONICAS RO S.A.S</td>
     <td class="gl" style="width:12%">NIT</td><td>900.796.928-1</td>
-  </tr>
+   </tr>
   <tr>
     <td class="gl">Contacto</td><td>Harrison Rincon</td>
     <td class="gl">Telefono</td><td>314 3740477</td>
-  </tr>
+   </tr>
 </table>
 
 <table>
@@ -1320,14 +1328,14 @@ async function exportarInformeRO(eid) {
   <tr>
     <td class="gl" style="width:18%">Empresa</td><td>Construciones Arquitectonicas RO</td>
     <td class="gl" style="width:12%">NIT</td><td>900.796.928-1</td>
-  </tr>
+   </tr>
   <tr>
     <td class="gl">Contacto</td><td>Harrison Rincon</td>
     <td class="gl">Celular</td><td>314 3740477</td>
-  </tr>
+   </tr>
   <tr>
     <td class="gl">Direccion</td><td colspan="3">Cl. 68 Sur #81-29, Bosa, Bogota</td>
-  </tr>
+   </tr>
 </table>
 
 <table>
@@ -1336,16 +1344,16 @@ async function exportarInformeRO(eid) {
     <td class="gl" style="width:16%">Equipo</td><td style="width:28%">${e?.tipo||''} ${e?.marca||''} ${e?.modelo||''}</td>
     <td class="gl" style="width:10%">Serial</td><td style="width:16%">${e?.serie||'N/A'}</td>
     <td class="gl" style="width:10%">Ubicacion</td><td>${e?.ubicacion||''}</td>
-  </tr>
+   </tr>
   <tr>
     <td class="gl">Tipo servicio</td><td colspan="3">${tipoSrv}</td>
     <td class="gl">Fecha</td><td style="text-align:center;">${fechaTexto}</td>
-  </tr>
+   </tr>
   <tr>
     <td class="gl">Hora entrada</td><td style="text-align:center;">${hEntrada}</td>
     <td class="gl">Hora salida</td><td style="text-align:center;">${hSalida}</td>
     <td class="gl">Tecnico</td><td>${sesionActual?.nombre||''}</td>
-  </tr>
+   </tr>
 </table>
 
 <table>
@@ -1362,19 +1370,19 @@ async function exportarInformeRO(eid) {
     <td class="gl" style="width:10%;text-align:center;">Cedula</td>
     <td class="gl" style="width:11%;text-align:center;">Cargo</td>
     <td class="gl" style="text-align:center;">Quien recibe</td>
-  </tr>
+   </tr>
   <tr>
     <td style="padding:4px 6px;"><span class="firma">${sesionActual?.nombre||''}</span></td>
     <td style="text-align:center;">${sesionActual?.cedula||''}</td>
     <td>${sesionActual?.cargo||''}</td>
     <td style="padding:4px;">${recibe}</td>
-  </tr>
+   </tr>
   <tr>
     <td colspan="2" style="padding:4px;">
       ${firmaDataUrl ? `<img src="${firmaDataUrl}" style="max-height:44px;">` : '<div style="height:44px;"></div>'}
     </td>
     <td colspan="2" style="padding:4px;color:#888;font-size:7pt;">_______________________________________<br>Firma y sello quien recibe</td>
-  </tr>
+   </tr>
 </table>
 
 <div style="font-size:6pt;color:#aaa;text-align:right;margin-top:4px;">
@@ -1660,7 +1668,6 @@ function modalQR(eid) {
         const qrDataUrl = qrCanvas.toDataURL('image/png');
         document.body.removeChild(qrDiv);
 
-        // Construir canvas compuesto: logo + info + QR dentro de rectángulo
         const W = 400, PAD = 16;
         const compCanvas = document.createElement('canvas');
         const ctx = compCanvas.getContext('2d');
@@ -1671,7 +1678,6 @@ function modalQR(eid) {
 
         logoImg.onload = () => {
             qrImg.onload = () => {
-                // calcular altura total
                 const logoH = 50;
                 const infoH = 70;
                 const qrH = 280;
@@ -1680,22 +1686,18 @@ function modalQR(eid) {
                 compCanvas.width = W;
                 compCanvas.height = totalH;
 
-                // fondo blanco con borde
                 ctx.fillStyle = '#ffffff';
                 ctx.fillRect(0, 0, W, totalH);
                 ctx.strokeStyle = '#0c214a';
                 ctx.lineWidth = 3;
                 ctx.strokeRect(2, 2, W-4, totalH-4);
 
-                // franja verde superior
                 ctx.fillStyle = '#0c214a';
                 ctx.fillRect(2, 2, W-4, logoH + PAD + 4);
 
-                // logo centrado
                 const logoW = logoImg.width * (logoH / logoImg.height);
                 ctx.drawImage(logoImg, (W - logoW)/2, PAD, logoW, logoH);
 
-                // bloque info equipo
                 let y = PAD + logoH + 8 + 4;
                 ctx.fillStyle = '#111';
                 ctx.font = 'bold 14px Arial';
@@ -1708,11 +1710,9 @@ function modalQR(eid) {
                 ctx.fillText('👤 ' + (c?.nombre||''), W/2, y + 50);
                 if (e?.serie) { ctx.font = '10px Arial'; ctx.fillStyle='#888'; ctx.fillText('Serie: '+e.serie, W/2, y+64); }
 
-                // QR centrado
                 y = PAD + logoH + 8 + 4 + infoH + 8;
                 ctx.drawImage(qrImg, (W-280)/2, y, 280, 280);
 
-                // pie
                 y += 280 + 8;
                 ctx.font = '10px Arial';
                 ctx.fillStyle = '#888';
@@ -1728,7 +1728,6 @@ function modalQR(eid) {
             qrImg.src = qrDataUrl;
         };
         logoImg.onerror = () => {
-            // sin logo, solo mostrar QR
             showModal(`<div class="modal" style="max-width:340px;"><div class="modal-h"><h3>📱 Codigo QR</h3><button class="xbtn" onclick="closeModal()">✕</button></div><div class="modal-b" style="text-align:center;"><img src="${qrDataUrl}" style="width:100%;"><a href="${qrDataUrl}" download="QR_${e?.marca}_${e?.modelo}.png" class="btn btn-blue btn-full" style="margin-top:8px;">⬇️ Descargar QR</a></div></div>`);
         };
     }, 200);
