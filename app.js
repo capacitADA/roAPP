@@ -1589,15 +1589,18 @@ async function agregarPestanaExcel(wb, srv, fotoB64s, jmcHtmlString) {
     ];
     datosT.forEach(([lc, vc, lv, vv]) => {
         const lCell = ws.getCell(lc);
-        lCell.value = lv; lCell.font = { name:'Arial', bold:true, size:9 };
+        lCell.value = lv; lCell.font = { name:'Arial', bold:true, size:8 };
         lCell.border = { top:{style:'thin'}, bottom:{style:'thin'}, left:{style:'medium'}, right:{style:'thin'} };
         ws.mergeCells(vc);
         const vCell = ws.getCell(vc.split(':')[0]);
-        vCell.value = vv; vCell.font = { name:'Arial', size:9 };
+        vCell.value = vv; vCell.font = { name:'Arial', size:8 };
         vCell.alignment = { horizontal:'center', vertical:'middle', wrapText: lv==='Nombre Tienda' };
         vCell.border = { top:{style:'thin'}, bottom:{style:'thin'}, left:{style:'thin'}, right:{style:'medium'} };
     });
     for (let r = 2; r <= 7; r++) ws.getRow(r).height = r === 4 ? 24 : 16;
+
+ // ── Fila 7: Altura del logo
+ws.getRow(7).height = 70;
 
     // ── Fila 8: separador ───────────────────────────────────────────────────
     ws.mergeCells('A8:G8');
@@ -1711,8 +1714,8 @@ REPUESTOS: ${srv.repuestos}` : '');
         const [olmBlob, araBlob] = await Promise.all([olmResp.blob(), araResp.blob()]);
         const toB64 = blob => new Promise(r => { const rd = new FileReader(); rd.onload = () => r(rd.result); rd.readAsDataURL(blob); });
         const [olmB64, araB64] = await Promise.all([toB64(olmBlob), toB64(araBlob)]);
-        await addImg(olmB64, 0, 1, 180, 52);  // A2
-        await addImg(araB64, 0, 4, 280, 52);  // A5
+        await addImg(olmB64, 0, 1, 270, 70);  // A2
+        await addImg(araB64, 0, 5, 140, 52);  // A5
     } catch(e) { console.warn('logos error:', e); }
 
     // ── Insertar fotos evidencias ────────────────────────────────────────────
