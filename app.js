@@ -1473,20 +1473,24 @@ async function exportarInformeRO(eid) {
 // ============================================================
 
 // ── Utilidades de semana ──────────────────────────────────────────────────────
-function getNumSemana(fecha) {
-    const d = fecha ? new Date(fecha + 'T12:00:00') : new Date();
-    // Metodo ISO 8601: semana empieza el lunes
-    const tmp = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-    const dayOfWeek = tmp.getUTCDay() || 7;
-    tmp.setUTCDate(tmp.getUTCDate() + 4 - dayOfWeek);
-    const yearStart = new Date(Date.UTC(tmp.getUTCFullYear(), 0, 1));
-    return Math.ceil((((tmp - yearStart) / 86400000) + 1) / 7);
+function getNumSemana(fechaStr) {
+    if (!fechaStr || typeof fechaStr !== 'string') fechaStr = new Date().toISOString().split('T')[0];
+    const p = fechaStr.split('-');
+    if (p.length < 3 || isNaN(parseInt(p[0]))) fechaStr = new Date().toISOString().split('T')[0];
+    const pp = fechaStr.split('-');
+    const tmp = new Date(Date.UTC(parseInt(pp[0]), parseInt(pp[1])-1, parseInt(pp[2])));
+    const dow = tmp.getUTCDay() || 7;
+    tmp.setUTCDate(tmp.getUTCDate() + 4 - dow);
+    const ys = new Date(Date.UTC(tmp.getUTCFullYear(), 0, 1));
+    return Math.ceil((((tmp - ys) / 86400000) + 1) / 7);
 }
 
-function getNombreArchivoSemanal(fecha) {
-    const d = fecha ? new Date(fecha + 'T12:00:00') : new Date();
-    const w = String(getNumSemana(d)).padStart(2, '0');
-    return `Soportes_W${w}-${d.getFullYear()}.xlsx`;
+function getNombreArchivoSemanal(fechaStr) {
+    if (!fechaStr || typeof fechaStr !== 'string') fechaStr = new Date().toISOString().split('T')[0];
+    const p = fechaStr.split('-');
+    const yr = parseInt(p[0]) || new Date().getFullYear();
+    const w = String(getNumSemana(fechaStr)).padStart(2, '0');
+    return `Soportes_W${w}-${yr}.xlsx`;
 }
 
 // ── Escalar imagen base64 manteniendo aspecto, sin recorte ───────────────────
@@ -1562,200 +1566,185 @@ function fmtFechaExcel(s) {
 async function agregarPestanaExcel(wb, srv, fotoB64s, jmcHtmlString) {
     const ws = wb.addWorksheet(`${srv.ticket}-${srv.sap}`);
 
-    // Anchos de columna
-    ws.columns = COL_WIDTHS.map(w => ({ width: w }));
+    const MED = { top:{style:'medium'}, bottom:{style:'medium'}, left:{style:'medium'}, right:{style:'medium'} };
+    const THN = { top:{style:'thin'},   bottom:{style:'thin'},   left:{style:'thin'},   right:{style:'thin'} };
+    const cpx = w => Math.round(w * 7);
 
-    // ── Fila 1: título ──────────────────────────────────────────────────────
+    // Anchos columna: B=90px aprox = 9 chars
+    ws.columns = [
+        {width:10.3},{width:9.0},{width:15.3},
+        {width:8.4},{width:14.0},{width:10.0},{width:12.1}
+    ];
+
+    // Fila 1: titulo
     ws.mergeCells('A1:G1');
-    const tCell = ws.getCell('A1');
-    tCell.value = 'MANTENIMIENTO PREVENTIVO/CORRECTIVO';
-    tCell.font = { name: 'Arial', bold: true, size: 13 };
-    tCell.alignment = { horizontal: 'center', vertical: 'middle' };
-    tCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFFFF' } };
-    tCell.border = { top:{style:'medium'}, bottom:{style:'medium'}, left:{style:'medium'}, right:{style:'medium'} };
+    Object.assign(ws.getCell('A1'), {
+        value:'MANTENIMIENTO PREVENTIVO/CORRECTIVO',
+        font:{name:'Arial',bold:true,size:13},
+        alignment:{horizontal:'center',vertical:'middle'},
+        border:MED
+    });
     ws.getRow(1).height = 22;
 
-    // ── Filas 2-4: zona logos A2:D4 + datos E2:G4 ──────────────────────────
+    // Filas 2-6: Logo RO A2:D6 con borde + datos tienda E2:G6
     ws.mergeCells('A2:D6');
-    ws.mergeCells('A7:c7');
-
-    // Datos tienda
-    const datosT = [
-        ['E2','F2:G2','Ciudad',        srv.ciudad],
-        ['E3','F3:G3','Sap Tienda',    srv.sap],
-        ['E4','F4:G4','Nombre Tienda', srv.tienda],
-        ['E5','F5:G5','N° Tiket',      srv.ticket],
-        ['E6','F6:G6','Fecha',         fmtFechaExcel(srv.fecha)],
-    ];
-    datosT.forEach(([lc, vc, lv, vv]) => {
-        const lCell = ws.getCell(lc);
-        lCell.value = lv; lCell.font = { name:'Arial', bold:true, size:8 };
-        lCell.border = { top:{style:'thin'}, bottom:{style:'thin'}, left:{style:'medium'}, right:{style:'thin'} };
+    ws.getCell('A2').border = MED;
+    [
+        ['E2','F2:G2','Ciudad',        srv.ciudad,  false],
+        ['E3','F3:G3','Sap Tienda',    srv.sap,     false],
+        ['E4','F4:G4','Nombre Tienda', srv.tienda,  true],
+        ['E5','F5:G5','N° Tiket',      srv.ticket,  false],
+        ['E6','F6:G6','Fecha',         fmtFechaExcel(srv.fecha), false],
+    ].forEach(([lc,vc,lv,vv,wrap]) => {
+        Object.assign(ws.getCell(lc), {
+            value:lv, font:{name:'Arial',bold:true,size:9},
+            border:{top:{style:'thin'},bottom:{style:'thin'},left:{style:'medium'},right:{style:'thin'}}
+        });
         ws.mergeCells(vc);
-        const vCell = ws.getCell(vc.split(':')[0]);
-        vCell.value = vv; vCell.font = { name:'Arial', size:8 };
-        vCell.alignment = { horizontal:'center', vertical:'middle', wrapText: lv==='Nombre Tienda' };
-        vCell.border = { top:{style:'thin'}, bottom:{style:'thin'}, left:{style:'thin'}, right:{style:'medium'} };
+        Object.assign(ws.getCell(vc.split(':')[0]), {
+            value:vv, font:{name:'Arial',size:9},
+            alignment:{horizontal:'center',vertical:'middle',wrapText:wrap},
+            border:{top:{style:'thin'},bottom:{style:'thin'},left:{style:'thin'},right:{style:'medium'}}
+        });
     });
-    for (let r = 2; r <= 7; r++) ws.getRow(r).height = r === 4 ? 24 : 16;
+    for (let r=2;r<=6;r++) ws.getRow(r).height = 16;
 
- // ── Fila 7: Altura del logo
-ws.getRow(7).height = 70;
+    // Fila 7: Logo ARA A7:B7 + nombre cliente D7:G7
+    ws.mergeCells('A7:B7');
+    ws.getCell('A7').border = MED;
+    ws.getCell('C7').border = {top:{style:'medium'},bottom:{style:'medium'}};
+    ws.mergeCells('D7:G7');
+    Object.assign(ws.getCell('D7'), {
+        value:'JERONIMO MARTINS COLOMBIA',
+        font:{name:'Arial',bold:true,size:11},
+        alignment:{horizontal:'center',vertical:'middle'},
+        border:MED
+    });
+    ws.getRow(7).height = 65;
 
-    // ── Fila 8: separador ───────────────────────────────────────────────────
+    // Fila 8: separador
     ws.mergeCells('A8:G8');
-    ws.getRow(8).height = 6;
+    ws.getRow(8).height = 4;
 
-    // ── Fila 9: encabezados tabla ───────────────────────────────────────────
+    // Fila 9: encabezados tabla
     ws.mergeCells('A9:C9');
     [['A9','Descripcion'],['D9','Cantidad'],['E9','Volumen'],['F9','Valor U.'],['G9','Total']].forEach(([c,v]) => {
-        const cell = ws.getCell(c);
-        cell.value = v;
-        cell.font = { name:'Arial', size:9 };
-        cell.alignment = { horizontal:'center', vertical:'middle' };
-        cell.fill = { type:'pattern', pattern:'solid', fgColor:{ argb:'FFFFFFFF' } };
-        cell.border = { top:{style:'medium'}, bottom:{style:'medium'}, left:{style:'medium'}, right:{style:'medium'} };
+        Object.assign(ws.getCell(c), {
+            value:v, font:{name:'Arial',bold:true,size:9},
+            alignment:{horizontal:'center',vertical:'middle'},
+            fill:{type:'pattern',pattern:'solid',fgColor:{argb:'FFC6DFC9'}},
+            border:MED
+        });
     });
     ws.getRow(9).height = 16;
 
-    // ── Filas 10-13: tipo + filas vacías con fórmulas ───────────────────────
-    ws.mergeCells('A10:C10');
-    const tipoCell = ws.getCell('A10');
-    tipoCell.value = srv.tipo; tipoCell.font = { name:'Arial', size:9 };
-    tipoCell.alignment = { horizontal:'center' };
-    tipoCell.border = { top:{style:'thin'}, bottom:{style:'thin'}, left:{style:'thin'}, right:{style:'thin'} };
-    ws.getCell('D10').value = 1;
-    ws.getCell('D10').border = { top:{style:'thin'}, bottom:{style:'thin'}, left:{style:'thin'}, right:{style:'thin'} };
-    for (let r = 10; r <= 13; r++) {
-        ws.getCell(`G${r}`).value = { formula: `D${r}*F${r}` };
-        ws.getCell(`G${r}`).border = { top:{style:'thin'}, bottom:{style:'thin'}, left:{style:'thin'}, right:{style:'thin'} };
-        for (const c of ['E','F']) {
-            ws.getCell(`${c}${r}`).border = { top:{style:'thin'}, bottom:{style:'thin'}, left:{style:'thin'}, right:{style:'thin'} };
+    // Filas 10-13: tipo + formulas
+    for (let r=10;r<=13;r++) {
+        ws.mergeCells(`A${r}:C${r}`);
+        ws.getCell(`A${r}`).border = THN;
+        if (r===10) {
+            ws.getCell('A10').value = srv.tipo;
+            ws.getCell('A10').font = {name:'Arial',size:9};
+            ws.getCell('A10').alignment = {horizontal:'center'};
+            ws.getCell('D10').value = 1;
         }
+        for (const c of ['D','E','F']) ws.getCell(`${c}${r}`).border = THN;
+        ws.getCell(`G${r}`).value = {formula:`D${r}*F${r}`};
+        ws.getCell(`G${r}`).border = THN;
     }
 
-    // ── Fila 14: separador ──────────────────────────────────────────────────
+    // Fila 14: separador
     ws.getRow(14).height = 4;
 
-    // ── Fila 15: DESCRIPCIÓN DE LA FALLA + subtotales ──────────────────────
+    // Fila 15: DESCRIPCION header + subtotales
     ws.mergeCells('A15:E15');
-    const descHdr = ws.getCell('A15');
-    descHdr.value = 'DESCRIPCIÓN DE LA FALLA';
-    descHdr.font = { name:'Arial', bold:false, size:11 };
-    descHdr.alignment = { horizontal:'center', vertical:'middle' };
-    descHdr.fill = { type:'pattern', pattern:'solid', fgColor:{ argb:'FFE8F4EC' } };
-    descHdr.border = { top:{style:'medium'}, bottom:{style:'thin'}, left:{style:'medium'}, right:{style:'thin'} };
+    Object.assign(ws.getCell('A15'), {
+        value:'DESCRIPCIÓN DE LA FALLA',
+        font:{name:'Arial',size:11},
+        alignment:{horizontal:'center',vertical:'middle'},
+        fill:{type:'pattern',pattern:'solid',fgColor:{argb:'FFE8F4EC'}},
+        border:{top:{style:'medium'},bottom:{style:'thin'},left:{style:'medium'},right:{style:'thin'}}
+    });
+    ws.getCell('F15').value='SubTotal:'; ws.getCell('F15').border=MED;
+    ws.getCell('G15').value={formula:'SUM(G10:G13)'}; ws.getCell('G15').border=MED;
+    ws.getCell('F17').value='IVA:'; ws.getCell('F17').border=MED;
+    ws.getCell('G17').value={formula:'G15*0.19'}; ws.getCell('G17').border=MED;
+    ws.getCell('F18').value='Total:'; ws.getCell('F18').font={bold:true}; ws.getCell('F18').border=MED;
+    ws.getCell('G18').value={formula:'G17+G15'}; ws.getCell('G18').font={bold:true}; ws.getCell('G18').border=MED;
 
-    ws.getCell('F15').value = 'SubTotal:';
-    ws.getCell('G15').value = { formula: 'SUM(G10:G13)' };
-    ws.getCell('F17').value = 'IVA:';
-    ws.getCell('G17').value = { formula: 'G15*0.19' };
-    ws.getCell('F18').value = 'Total:';
-    ws.getCell('F18').font = { bold: true };
-    ws.getCell('G18').value = { formula: 'G17+G15' };
-    ws.getCell('G18').font = { bold: true };
-    for (const [fc,gc] of [['F15','G15'],['F17','G17'],['F18','G18']]) {
-        for (const c of [fc,gc]) ws.getCell(c).border = { top:{style:'medium'}, bottom:{style:'medium'}, left:{style:'medium'}, right:{style:'medium'} };
-    }
-
-    // ── Filas 16-18: texto de descripción + repuestos ───────────────────────
+    // Filas 16-18: descripcion + repuestos
     ws.mergeCells('A16:E18');
-    const texto = srv.descripcion + (srv.repuestos ? `
+    Object.assign(ws.getCell('A16'), {
+        value:(srv.descripcion||'')+(srv.repuestos?`
 
-REPUESTOS: ${srv.repuestos}` : '');
-    const descCell = ws.getCell('A16');
-    descCell.value = texto;
-    descCell.font = { name:'Arial', size:9 };
-    descCell.alignment = { horizontal:'left', vertical:'top', wrapText:true };
-    descCell.border = { top:{style:'thin'}, bottom:{style:'medium'}, left:{style:'medium'}, right:{style:'thin'} };
-    for (let r = 16; r <= 18; r++) ws.getRow(r).height = 18;
+REPUESTOS: ${srv.repuestos}`:''),
+        font:{name:'Arial',size:9},
+        alignment:{horizontal:'left',vertical:'top',wrapText:true},
+        border:{top:{style:'thin'},bottom:{style:'medium'},left:{style:'medium'},right:{style:'thin'}}
+    });
+    for (let r=16;r<=18;r++) ws.getRow(r).height = 20;
 
-    // ── Fila 19: REGISTRO FOTOGRÁFICO ───────────────────────────────────────
+    // Fila 19: REGISTRO FOTOGRAFICO
     ws.mergeCells('A19:G19');
-    const rfCell = ws.getCell('A19');
-    rfCell.value = 'REGISTRO FOTOGRAFICO';
-    rfCell.font = { name:'Arial', bold:true, size:11 };
-    rfCell.alignment = { horizontal:'center', vertical:'middle' };
-    rfCell.fill = { type:'pattern', pattern:'solid', fgColor:{ argb:'FFFFFFFF' } };
-    rfCell.border = { top:{style:'medium'}, bottom:{style:'medium'}, left:{style:'medium'}, right:{style:'medium'} };
+    Object.assign(ws.getCell('A19'), {
+        value:'REGISTRO FOTOGRAFICO',
+        font:{name:'Arial',bold:true,size:11},
+        alignment:{horizontal:'center',vertical:'middle'},
+        fill:{type:'pattern',pattern:'solid',fgColor:{argb:'FFC6DFC9'}},
+        border:MED
+    });
     ws.getRow(19).height = 18;
 
-    // Merge zonas de fotos y establecer alturas
-    ws.mergeCells('A20:C30'); ws.mergeCells('D20:G30');
-    ws.mergeCells('A31:C41'); ws.mergeCells('D31:G41');
-    ws.mergeCells('A42:C52'); ws.mergeCells('D42:G52');
-    for (let r = 20; r <= 52; r++) ws.getRow(r).height = 20;
+    // Zonas fotos: 11 filas cada una
+    const zonasDef = [
+        {merge:'A20:C30',cell:'A20',col:0,row:19},
+        {merge:'D20:G30',cell:'D20',col:3,row:19},
+        {merge:'A31:C41',cell:'A31',col:0,row:30},
+        {merge:'D31:G41',cell:'D31',col:3,row:30},
+        {merge:'A42:C52',cell:'A42',col:0,row:41},
+        {merge:'D42:G52',cell:'D42',col:3,row:41},
+    ];
+    zonasDef.forEach(z => { ws.mergeCells(z.merge); ws.getCell(z.cell).border = MED; });
+    for (let r=20;r<=52;r++) ws.getRow(r).height = 20;
 
-    // Bordes zonas fotos
-    for (const z of ['A20','D20','A31','D31','A42','D42']) {
-        const cell = ws.getCell(z);
-        cell.border = { top:{style:'medium'}, bottom:{style:'medium'}, left:{style:'medium'}, right:{style:'medium'} };
-    }
-
-    // ── Insertar logos ───────────────────────────────────────────────────────
+    // Helper insertar imagen
     async function addImg(b64, col, row, w, h) {
         if (!b64) return;
         try {
             const clean = b64.includes(',') ? b64.split(',')[1] : b64;
-            const imgId = wb.addImage({ base64: clean, extension: 'png' });
-            ws.addImage(imgId, {
-                tl: { col: col, row: row },
-                ext: { width: w, height: h },
-                editAs: 'oneCell'
-            });
-        } catch(e) { console.warn('img error:', e); }
+            const ext = b64.includes('image/png') ? 'png' : 'jpeg';
+            const id = wb.addImage({base64:clean, extension:ext});
+            ws.addImage(id, {tl:{col,row}, ext:{width:w,height:h}, editAs:'oneCell'});
+        } catch(e) { console.warn('img error:',e); }
     }
 
-    // Logo OLM (A2:D4) — col 0, row 1
-    const LOGO_OLM = 'https://raw.githubusercontent.com/capacitADA/roAPP/main/RO_LOGO.png';
+    // Pixeles exactos de zonas
+    const ABC_PX  = cpx(10.3)+cpx(9.0)+cpx(15.3);
+    const DEFG_PX = cpx(8.4)+cpx(14)+cpx(10)+cpx(12.1);
+    const FOTO_H  = Math.round(11*15*4/3);
+
+    // Logos
+    const LOGO_RO  = 'https://raw.githubusercontent.com/capacitADA/roAPP/main/RO_LOGO.png';
     const LOGO_ARA = 'https://raw.githubusercontent.com/capacitADA/roAPP/main/logo_ara.png';
     try {
-        const [olmResp, araResp] = await Promise.all([fetch(LOGO_OLM), fetch(LOGO_ARA)]);
-        const [olmBlob, araBlob] = await Promise.all([olmResp.blob(), araResp.blob()]);
-        const toB64 = blob => new Promise(r => { const rd = new FileReader(); rd.onload = () => r(rd.result); rd.readAsDataURL(blob); });
-        const [olmB64, araB64] = await Promise.all([toB64(olmBlob), toB64(araBlob)]);
-        await addImg(olmB64, 0, 1, 270, 70);  // A2
-        await addImg(araB64, 0, 5, 140, 52);  // A5
-    } catch(e) { console.warn('logos error:', e); }
+        const toB64 = bl => new Promise(r=>{const rd=new FileReader();rd.onload=()=>r(rd.result);rd.readAsDataURL(bl);});
+        const [roR,araR] = await Promise.all([fetch(LOGO_RO),fetch(LOGO_ARA)]);
+        const [roB64,araB64] = await Promise.all([toB64(await roR.blob()),toB64(await araR.blob())]);
+        // RO logo: A2:D6
+        const ro_w = cpx(10.3)+cpx(9.0)+cpx(15.3)+cpx(8.4);
+        await addImg(roB64, 0, 1, ro_w*0.82, Math.round(5*16*4/3)*0.82);
+        // ARA logo: A7:B7 centrado vertical en 65px
+        const ara_w = Math.round(55 * 380/80);
+        await addImg(araB64, 0, 6, ara_w, 55);
+    } catch(e) { console.warn('logos:',e); }
 
-    // ── Insertar fotos evidencias ────────────────────────────────────────────
-    // Zona A20:C30 = col 0 row 19, Zona D20:G30 = col 3 row 19
-    // Zona A31:C41 = col 0 row 30, Zona D31:G41 = col 3 row 30
+    // Fotos evidencias
     const zonas = [
-        { col:0, row:19, w:ZONA_ABC,  h:ZONA_H },  // Foto 1
-        { col:3, row:19, w:ZONA_DEFG, h:ZONA_H },  // Foto 2
-        { col:0, row:30, w:ZONA_ABC,  h:ZONA_H },  // Foto 3
-        { col:3, row:30, w:ZONA_DEFG, h:ZONA_H },  // Informe JMC
+        {col:0, row:19, w:ABC_PX,  h:FOTO_H},
+        {col:3, row:19, w:DEFG_PX, h:FOTO_H},
+        {col:0, row:30, w:ABC_PX,  h:FOTO_H},
+        {col:3, row:30, w:DEFG_PX, h:FOTO_H},
     ];
-
-    for (let i = 0; i < zonas.length; i++) {
-        const z = zonas[i];
-        if (i === 3) {
-            // 4ta zona: captura del informe JMC
-            if (jmcHtmlString) {
-                const capture = await capturarHTMLcomoImagen(jmcHtmlString, z.w, z.h);
-                if (capture) await addImg(capture.dataUrl, z.col, z.row, capture.w, capture.h);
-            }
-        } else if (fotoB64s[i]) {
-            const scaled = await escalarImagenB64(fotoB64s[i], z.w, z.h);
-            await addImg(scaled.dataUrl, z.col, z.row, scaled.w, scaled.h);
-        }
-    }
-}
-
-// ── Guardar Excel en Drive (Apps Script separado) ────────────────────────────
-const EXCEL_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwZz6WpCHDI7LQDiWn0Oc2zA1HLPBC6_dI0XKfy1n6OF41E6Vi6y74v_hpgO95kxW3M/exec';
-
-function bufferToBase64(buffer) {
-    // Convertir en chunks para evitar Maximum call stack exceeded
-    const bytes = new Uint8Array(buffer);
-    let bin = '';
-    const CHUNK = 8192;
-    for (let i = 0; i < bytes.length; i += CHUNK) {
-        bin += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
-    }
-    return btoa(bin);
-}
 
 async function subirExcelADrive(xlsxBuffer, filename) {
     try {
