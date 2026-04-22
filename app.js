@@ -1465,343 +1465,116 @@ async function exportarInformeRO(eid) {
 
 
 // ============================================================
-// GENERACIÓN DE EXCEL SEMANAL DE SOPORTES Y EVIDENCIAS
-// Se llama desde exportarInformeJMC() tras generar el PDF
-// Genera un xlsx por semana: Soportes_W{semana}-{año}.xlsx
-// Cada servicio JMC = una pestaña [ticket]-[sap]
-// Requiere ExcelJS cargado desde CDN en index.html
+// GENERACIÓN EXCEL SEMANAL - NUEVA ARQUITECTURA
+// El navegador captura las imágenes y envía datos+fotos al
+// Apps Script, que maneja todo en Drive:
+//   1. Busca/crea Soportes_W{nn}-{yyyy} copiando el base
+//   2. Duplica pestaña "Ejemplo" → renombra [Ticket]-[SAP]
+//   3. Llena datos e inserta 4 imágenes
 // ============================================================
 
-// ── Utilidades de semana ──────────────────────────────────────────────────────
-function getNumSemana(fechaStr) {
-    if (!fechaStr || typeof fechaStr !== 'string') fechaStr = new Date().toISOString().split('T')[0];
-    const p = fechaStr.split('-');
-    if (p.length < 3 || isNaN(parseInt(p[0]))) fechaStr = new Date().toISOString().split('T')[0];
-    const pp = fechaStr.split('-');
-    const tmp = new Date(Date.UTC(parseInt(pp[0]), parseInt(pp[1])-1, parseInt(pp[2])));
-    const dow = tmp.getUTCDay() || 7;
-    tmp.setUTCDate(tmp.getUTCDate() + 4 - dow);
-    const ys = new Date(Date.UTC(tmp.getUTCFullYear(), 0, 1));
-    return Math.ceil((((tmp - ys) / 86400000) + 1) / 7);
-}
+const EXCEL_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzw4N4af4jXZsqKLq0c7Sijf4Z1Za5ttSUIwd4OiFDCiZNPCDfY7znMziyyyx0x2iXk/exec';
 
-function getNombreArchivoSemanal(fechaStr) {
-    if (!fechaStr || typeof fechaStr !== 'string') fechaStr = new Date().toISOString().split('T')[0];
-    const p = fechaStr.split('-');
-    const yr = parseInt(p[0]) || new Date().getFullYear();
-    const w = String(getNumSemana(fechaStr)).padStart(2, '0');
-    return `Soportes_W${w}-${yr}.xlsx`;
-}
-
-// ── Escalar imagen base64 manteniendo aspecto, sin recorte ───────────────────
+// ── Escalar imagen base64 sin recorte, máx alto o ancho ──────────────────
 async function escalarImagenB64(b64, maxW, maxH) {
     return new Promise(resolve => {
         const img = new Image();
         img.onload = () => {
             const scale = Math.min(maxW / img.width, maxH / img.height);
-            const w = Math.round(img.width * scale);
+            const w = Math.round(img.width  * scale);
             const h = Math.round(img.height * scale);
             const c = document.createElement('canvas');
             c.width = w; c.height = h;
             c.getContext('2d').drawImage(img, 0, 0, w, h);
-            resolve({ dataUrl: c.toDataURL('image/png'), w, h });
+            resolve(c.toDataURL('image/jpeg', 0.82));
         };
-        img.onerror = () => resolve({ dataUrl: b64, w: maxW, h: maxH });
+        img.onerror = () => resolve(b64);
         img.src = b64;
     });
 }
 
-// ── Capturar HTML del informe JMC como imagen PNG ────────────────────────────
+// ── Capturar HTML del informe JMC como imagen PNG ────────────────────────
 async function capturarHTMLcomoImagen(htmlString, maxW, maxH) {
     return new Promise(resolve => {
-        // Usar un iframe oculto + html2canvas si está disponible
-        // Si no, devolver null para usar placeholder
         if (!window.html2canvas) { resolve(null); return; }
         const iframe = document.createElement('iframe');
-        iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:800px;height:1100px;';
+        iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:800px;height:1100px;border:none;';
         document.body.appendChild(iframe);
         iframe.contentDocument.open();
         iframe.contentDocument.write(htmlString);
         iframe.contentDocument.close();
         setTimeout(() => {
             html2canvas(iframe.contentDocument.body, {
-                scale: 0.5, useCORS: true, logging: false,
-                width: 800, height: 1100
+                scale: 0.6, useCORS: true, logging: false,
+                width: 800, height: 1100, backgroundColor: '#ffffff'
             }).then(canvas => {
                 document.body.removeChild(iframe);
-                escalarImagenB64(canvas.toDataURL('image/png'), maxW, maxH).then(resolve);
+                escalarImagenB64(canvas.toDataURL('image/jpeg', 0.85), maxW, maxH).then(resolve);
             }).catch(() => {
-                document.body.removeChild(iframe);
+                try { document.body.removeChild(iframe); } catch(e) {}
                 resolve(null);
             });
-        }, 800);
+        }, 1000);
     });
 }
 
-// ── Convertir base64 a ArrayBuffer para ExcelJS ──────────────────────────────
-function b64ToArrayBuffer(b64) {
-    const bin = atob(b64.split(',')[1] || b64);
-    const buf = new Uint8Array(bin.length);
-    for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
-    return buf.buffer;
-}
+// ── Dimensiones px de zonas de fotos ─────────────────────────────────────
+// Anchos: A=10.25 B=10.75 C=15.25 D=8.38 E=14 F=10 G=12.13 (chars*7)
+const _cpx = w => Math.round(w * 7);
+const ZONA_ABC_W  = _cpx(10.25) + _cpx(10.75) + _cpx(15.25); // ~254px
+const ZONA_DEFG_W = _cpx(8.38)  + _cpx(14)    + _cpx(10) + _cpx(12.13); // ~309px
+const ZONA_H      = Math.round(11 * 15.75 * 4/3); // ~231px
 
-// ── Dimensiones de columnas (anchos reales en puntos Excel) ─────────────────
-// A=10.3 B=10.7 C=15.3 D=8.4 E=14 F=10 G=12.1
-const COL_WIDTHS = [10.3, 10.7, 15.3, 8.4, 14, 10, 12.1];
-// Zonas de imágenes en píxeles (calculadas de anchos reales)
-const ZONA_ABC  = Math.round((10.3 + 10.7 + 15.3) * 7); // ~254px
-const ZONA_DEFG = Math.round((8.4 + 14 + 10 + 12.1) * 7); // ~310px
-const ZONA_H    = Math.round(11 * 15 * 4 / 3);             // ~220px
-
-// Meses en español para formato fecha
-const MESES_CORTO = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-function fmtFechaExcel(s) {
-    if (!s) return '';
-    const [y, m, d] = s.split('-');
-    return `${d}-${MESES_CORTO[parseInt(m)-1]}-${y}`;
-}
-
-// ── Función principal: agregar pestaña al workbook ───────────────────────────
-async function agregarPestanaExcel(wb, srv, fotoB64s, jmcHtmlString) {
-    const ws = wb.addWorksheet(`${srv.ticket}-${srv.sap}`);
-
-    const MED = { top:{style:'medium'}, bottom:{style:'medium'}, left:{style:'medium'}, right:{style:'medium'} };
-    const THN = { top:{style:'thin'},   bottom:{style:'thin'},   left:{style:'thin'},   right:{style:'thin'} };
-    const cpx = w => Math.round(w * 7);
-
-    // Anchos columna: B=90px aprox = 9 chars
-    ws.columns = [
-        {width:10.3},{width:9.0},{width:15.3},
-        {width:8.4},{width:14.0},{width:10.0},{width:12.1}
-    ];
-
-    // Fila 1: titulo
-    ws.mergeCells('A1:G1');
-    Object.assign(ws.getCell('A1'), {
-        value:'MANTENIMIENTO PREVENTIVO/CORRECTIVO',
-        font:{name:'Arial',bold:true,size:13},
-        alignment:{horizontal:'center',vertical:'middle'},
-        border:MED
-    });
-    ws.getRow(1).height = 22;
-
-    // Filas 2-6: Logo RO A2:D6 con borde + datos tienda E2:G6
-    ws.mergeCells('A2:D6');
-    ws.getCell('A2').border = MED;
-    [
-        ['E2','F2:G2','Ciudad',        srv.ciudad,  false],
-        ['E3','F3:G3','Sap Tienda',    srv.sap,     false],
-        ['E4','F4:G4','Nombre Tienda', srv.tienda,  true],
-        ['E5','F5:G5','N° Tiket',      srv.ticket,  false],
-        ['E6','F6:G6','Fecha',         fmtFechaExcel(srv.fecha), false],
-    ].forEach(([lc,vc,lv,vv,wrap]) => {
-        Object.assign(ws.getCell(lc), {
-            value:lv, font:{name:'Arial',bold:true,size:9},
-            border:{top:{style:'thin'},bottom:{style:'thin'},left:{style:'medium'},right:{style:'thin'}}
-        });
-        ws.mergeCells(vc);
-        Object.assign(ws.getCell(vc.split(':')[0]), {
-            value:vv, font:{name:'Arial',size:9},
-            alignment:{horizontal:'center',vertical:'middle',wrapText:wrap},
-            border:{top:{style:'thin'},bottom:{style:'thin'},left:{style:'thin'},right:{style:'medium'}}
-        });
-    });
-    for (let r=2;r<=6;r++) ws.getRow(r).height = 16;
-
-    // Fila 7: Logo ARA A7:B7 + nombre cliente D7:G7
-    ws.mergeCells('A7:B7');
-    ws.getCell('A7').border = MED;
-    ws.getCell('C7').border = {top:{style:'medium'},bottom:{style:'medium'}};
-    ws.mergeCells('D7:G7');
-    Object.assign(ws.getCell('D7'), {
-        value:'JERONIMO MARTINS COLOMBIA',
-        font:{name:'Arial',bold:true,size:11},
-        alignment:{horizontal:'center',vertical:'middle'},
-        border:MED
-    });
-    ws.getRow(7).height = 65;
-
-    // Fila 8: separador
-    ws.mergeCells('A8:G8');
-    ws.getRow(8).height = 4;
-
-    // Fila 9: encabezados tabla
-    ws.mergeCells('A9:C9');
-    [['A9','Descripcion'],['D9','Cantidad'],['E9','Volumen'],['F9','Valor U.'],['G9','Total']].forEach(([c,v]) => {
-        Object.assign(ws.getCell(c), {
-            value:v, font:{name:'Arial',bold:true,size:9},
-            alignment:{horizontal:'center',vertical:'middle'},
-            fill:{type:'pattern',pattern:'solid',fgColor:{argb:'FFC6DFC9'}},
-            border:MED
-        });
-    });
-    ws.getRow(9).height = 16;
-
-    // Filas 10-13: tipo + formulas
-    for (let r=10;r<=13;r++) {
-        ws.mergeCells(`A${r}:C${r}`);
-        ws.getCell(`A${r}`).border = THN;
-        if (r===10) {
-            ws.getCell('A10').value = srv.tipo;
-            ws.getCell('A10').font = {name:'Arial',size:9};
-            ws.getCell('A10').alignment = {horizontal:'center'};
-            ws.getCell('D10').value = 1;
-        }
-        for (const c of ['D','E','F']) ws.getCell(`${c}${r}`).border = THN;
-        ws.getCell(`G${r}`).value = {formula:`D${r}*F${r}`};
-        ws.getCell(`G${r}`).border = THN;
-    }
-
-    // Fila 14: separador
-    ws.getRow(14).height = 4;
-
-    // Fila 15: DESCRIPCION header + subtotales
-    ws.mergeCells('A15:E15');
-    Object.assign(ws.getCell('A15'), {
-        value:'DESCRIPCIÓN DE LA FALLA',
-        font:{name:'Arial',size:11},
-        alignment:{horizontal:'center',vertical:'middle'},
-        fill:{type:'pattern',pattern:'solid',fgColor:{argb:'FFE8F4EC'}},
-        border:{top:{style:'medium'},bottom:{style:'thin'},left:{style:'medium'},right:{style:'thin'}}
-    });
-    ws.getCell('F15').value='SubTotal:'; ws.getCell('F15').border=MED;
-    ws.getCell('G15').value={formula:'SUM(G10:G13)'}; ws.getCell('G15').border=MED;
-    ws.getCell('F17').value='IVA:'; ws.getCell('F17').border=MED;
-    ws.getCell('G17').value={formula:'G15*0.19'}; ws.getCell('G17').border=MED;
-    ws.getCell('F18').value='Total:'; ws.getCell('F18').font={bold:true}; ws.getCell('F18').border=MED;
-    ws.getCell('G18').value={formula:'G17+G15'}; ws.getCell('G18').font={bold:true}; ws.getCell('G18').border=MED;
-
-    // Filas 16-18: descripcion + repuestos
-    ws.mergeCells('A16:E18');
-    Object.assign(ws.getCell('A16'), {
-        value:(srv.descripcion||'')+(srv.repuestos?`
-
-REPUESTOS: ${srv.repuestos}`:''),
-        font:{name:'Arial',size:9},
-        alignment:{horizontal:'left',vertical:'top',wrapText:true},
-        border:{top:{style:'thin'},bottom:{style:'medium'},left:{style:'medium'},right:{style:'thin'}}
-    });
-    for (let r=16;r<=18;r++) ws.getRow(r).height = 20;
-
-    // Fila 19: REGISTRO FOTOGRAFICO
-    ws.mergeCells('A19:G19');
-    Object.assign(ws.getCell('A19'), {
-        value:'REGISTRO FOTOGRAFICO',
-        font:{name:'Arial',bold:true,size:11},
-        alignment:{horizontal:'center',vertical:'middle'},
-        fill:{type:'pattern',pattern:'solid',fgColor:{argb:'FFC6DFC9'}},
-        border:MED
-    });
-    ws.getRow(19).height = 18;
-
-    // Zonas fotos: 11 filas cada una
-    const zonasDef = [
-        {merge:'A20:C30',cell:'A20',col:0,row:19},
-        {merge:'D20:G30',cell:'D20',col:3,row:19},
-        {merge:'A31:C41',cell:'A31',col:0,row:30},
-        {merge:'D31:G41',cell:'D31',col:3,row:30},
-        {merge:'A42:C52',cell:'A42',col:0,row:41},
-        {merge:'D42:G52',cell:'D42',col:3,row:41},
-    ];
-    zonasDef.forEach(z => { ws.mergeCells(z.merge); ws.getCell(z.cell).border = MED; });
-    for (let r=20;r<=52;r++) ws.getRow(r).height = 20;
-
-    // Helper insertar imagen
-    async function addImg(b64, col, row, w, h) {
-        if (!b64) return;
-        try {
-            const clean = b64.includes(',') ? b64.split(',')[1] : b64;
-            const ext = b64.includes('image/png') ? 'png' : 'jpeg';
-            const id = wb.addImage({base64:clean, extension:ext});
-            ws.addImage(id, {tl:{col,row}, ext:{width:w,height:h}, editAs:'oneCell'});
-        } catch(e) { console.warn('img error:',e); }
-    }
-
-    // Pixeles exactos de zonas
-    const ABC_PX  = cpx(10.3)+cpx(9.0)+cpx(15.3);
-    const DEFG_PX = cpx(8.4)+cpx(14)+cpx(10)+cpx(12.1);
-    const FOTO_H  = Math.round(11*15*4/3);
-
-    // Logos
-    const LOGO_RO  = 'https://raw.githubusercontent.com/capacitADA/roAPP/main/RO_LOGO.png';
-    const LOGO_ARA = 'https://raw.githubusercontent.com/capacitADA/roAPP/main/logo_ara.png';
+// ── Enviar al Apps Script ─────────────────────────────────────────────────
+async function generarYGuardarExcelSemanal(srv, fotoB64s, jmcHtmlString) {
     try {
-        const toB64 = bl => new Promise(r=>{const rd=new FileReader();rd.onload=()=>r(rd.result);rd.readAsDataURL(bl);});
-        const [roR,araR] = await Promise.all([fetch(LOGO_RO),fetch(LOGO_ARA)]);
-        const [roB64,araB64] = await Promise.all([toB64(await roR.blob()),toB64(await araR.blob())]);
-        // RO logo: A2:D6
-        const ro_w = cpx(10.3)+cpx(9.0)+cpx(15.3)+cpx(8.4);
-        await addImg(roB64, 0, 1, ro_w*0.82, Math.round(5*16*4/3)*0.82);
-        // ARA logo: A7:B7 centrado vertical en 65px
-        const ara_w = Math.round(55 * 380/80);
-        await addImg(araB64, 0, 6, ara_w, 55);
-    } catch(e) { console.warn('logos:',e); }
+        toast('📊 Preparando soporte semanal...');
 
-    // Fotos evidencias
-    const zonas = [
-        {col:0, row:19, w:ABC_PX,  h:FOTO_H},
-        {col:3, row:19, w:DEFG_PX, h:FOTO_H},
-        {col:0, row:30, w:ABC_PX,  h:FOTO_H},
-        {col:3, row:30, w:DEFG_PX, h:FOTO_H},
-    ];
+        // Escalar fotos al tamaño de su zona
+        const [f1, f2, f3] = await Promise.all([
+            fotoB64s[0] ? escalarImagenB64(fotoB64s[0], ZONA_ABC_W,  ZONA_H) : Promise.resolve(''),
+            fotoB64s[1] ? escalarImagenB64(fotoB64s[1], ZONA_DEFG_W, ZONA_H) : Promise.resolve(''),
+            fotoB64s[2] ? escalarImagenB64(fotoB64s[2], ZONA_ABC_W,  ZONA_H) : Promise.resolve(''),
+        ]);
 
-async function subirExcelADrive(xlsxBuffer, filename) {
-    try {
-        const base64 = bufferToBase64(xlsxBuffer);
+        // Capturar informe JMC como imagen
+        const fJMC = jmcHtmlString
+            ? await capturarHTMLcomoImagen(jmcHtmlString, ZONA_DEFG_W, ZONA_H)
+            : null;
+
+        const payload = {
+            ticket:      srv.ticket,
+            sap:         srv.sap,
+            tienda:      srv.tienda,
+            ciudad:      srv.ciudad,
+            fecha:       srv.fecha,
+            tipo:        srv.tipo,
+            descripcion: srv.descripcion,
+            repuestos:   srv.repuestos || '',
+            foto1:       f1  || '',
+            foto2:       f2  || '',
+            foto3:       f3  || '',
+            fotoJMC:     fJMC || '',
+        };
+
+        toast('☁️ Subiendo soporte a Drive...');
+
         await fetch(EXCEL_SCRIPT_URL, {
             method: 'POST',
-            mode: 'no-cors',
+            mode:   'no-cors',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ xlsx: base64, filename })
+            body: JSON.stringify(payload)
         });
-        console.log('✅ Excel enviado a Drive:', filename);
-        return true;
-    } catch(e) {
-        console.error('Error subiendo Excel:', e);
-        return false;
-    }
-}
 
-// ── Función pública: llamar desde exportarInformeJMC ─────────────────────────
-async function generarYGuardarExcelSemanal(srv, fotoB64s, jmcHtmlString) {
-    if (!window.ExcelJS) {
-        toast('⚠️ ExcelJS no cargado');
-        return;
-    }
-    try {
-        toast('📊 Generando Excel semanal...');
-        const filename = getNombreArchivoSemanal(srv.fecha);
+        toast('✅ Soporte semanal guardado en Drive');
 
-        // Crear workbook nuevo (cada llamada genera su propio archivo semanal)
-        // En producción se debería descargar el existente, agregar pestaña y re-subir
-        // Por ahora: un xlsx por servicio que se sube a Drive y se consolida manualmente
-        // TODO: implementar fetch del xlsx semanal existente desde Drive para agregar pestaña
-        const wb = new ExcelJS.Workbook();
-        wb.creator = 'capacitADA OLM App';
-        wb.created = new Date();
-
-        await agregarPestanaExcel(wb, srv, fotoB64s, jmcHtmlString);
-
-        const buffer = await wb.xlsx.writeBuffer();
-        const ok = await subirExcelADrive(buffer, filename);
-        if (ok) {
-            toast(`✅ Excel ${filename} guardado en Drive`);
-        } else {
-            // Fallback: descarga local
-            const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url; a.download = filename; a.click();
-            URL.revokeObjectURL(url);
-            toast(`📥 Excel descargado: ${filename}`);
-        }
     } catch(err) {
-        console.error('Error Excel:', err);
-        toast('❌ Error generando Excel: ' + err.message);
+        console.error('Error Excel semanal:', err);
+        toast('❌ Error soporte semanal: ' + err.message);
     }
 }
 // ── FIN GENERACIÓN EXCEL SEMANAL ─────────────────────────────────────────────
+
 
 // ===== CRUD CLIENTES =====
 function modalNuevoCliente() {
